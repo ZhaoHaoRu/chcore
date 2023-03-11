@@ -175,7 +175,7 @@ static struct page *merge_page(struct phys_mem_pool *pool, struct page *page)
         struct page *buddy = NULL;
         while (order < BUDDY_MAX_ORDER - 1) {
                 buddy = get_buddy_chunk(pool, page);
-                if (buddy == NULL || buddy->allocated == 1) {
+                if (buddy == NULL || buddy->allocated == 1 || buddy->order != order) {
 //                        kdebug("the buddy is not available, the current level: %d\n", order);
                         break;
                 }
