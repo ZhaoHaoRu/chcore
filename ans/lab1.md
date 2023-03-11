@@ -53,6 +53,6 @@ void uart_send_string(char *str)
 ## 练习题7
 添加的代码为
 ```asm
-orr     x8, x8
+orr     x8, x8, 
 ```
 这个命令的主要功能是将`sctlr_el1`的值写入`x8`,

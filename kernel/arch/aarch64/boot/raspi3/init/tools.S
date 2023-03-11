@@ -252,7 +252,7 @@ BEGIN_FUNC(el1_mmu_activate)
 	mrs     x8, sctlr_el1
 	/* Enable MMU */
 	/* LAB 1 TODO 4 BEGIN */
-        orr     x8, x8, #SCTLR_EL1_A
+        orr     x8, x8, #SCTLR_EL1_M
 	/* LAB 1 TODO 4 END */
 	/* Disable alignment checking */
 	bic     x8, x8, #SCTLR_EL1_A
