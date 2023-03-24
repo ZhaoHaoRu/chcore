@@ -71,7 +71,10 @@ int cap_group_init(struct cap_group *cap_group, unsigned int size, u64 pid)
 {
         struct slot_table *slot_table = &cap_group->slot_table;
         /* LAB 3 TODO BEGIN */
-
+        slot_table_init(slot_table, size);
+        init_list_head(&(cap_group->thread_list));
+        cap_group->thread_cnt = 1;
+        cap_group->pid = pid;
         /* LAB 3 TODO END */
         return 0;
 }
@@ -231,7 +234,7 @@ int sys_create_cap_group(u64 pid, u64 cap_group_name, u64 name_len, u64 pcid)
         }
         /* LAB 3 TODO BEGIN */
         /* cap current cap_group */
-
+        new_cap_group = (struct cap_group*)obj_alloc(TYPE_CAP_GROUP, sizeof(struct cap_group));
 
         /* LAB 3 TODO END */
 
@@ -240,7 +243,7 @@ int sys_create_cap_group(u64 pid, u64 cap_group_name, u64 name_len, u64 pcid)
                 goto out_fail;
         }
         /* LAB 3 TODO BEGIN */
-
+        cap_group_init(new_cap_group, BASE_OBJECT_NUM, pid);
         /* LAB 3 TODO END */
 
         cap = cap_alloc(current_cap_group, new_cap_group, 0);
@@ -259,7 +262,7 @@ int sys_create_cap_group(u64 pid, u64 cap_group_name, u64 name_len, u64 pcid)
 
         /* 2st cap is vmspace */
         /* LAB 3 TODO BEGIN */
-
+        vmspace = (struct vmspace*)obj_alloc(TYPE_VMSPACE, sizeof(struct vmspace));
         /* LAB 3 TODO END */
         if (!vmspace) {
                 r = -ENOMEM;
@@ -303,15 +306,15 @@ struct cap_group *create_root_cap_group(char *name, size_t name_len)
         struct vmspace *vmspace;
         int slot_id;
         /* LAB 3 TODO BEGIN */
-
+        cap_group = obj_alloc(TYPE_CAP_GROUP, sizeof(struct cap_group));
         /* LAB 3 TODO END */
         BUG_ON(!cap_group);
         /* LAB 3 TODO BEGIN */
-
+        cap_group_init(cap_group, BASE_OBJECT_NUM, ROOT_PID);
         /* LAB 3 TODO END */
         BUG_ON(slot_id != CAP_GROUP_OBJ_ID);
         /* LAB 3 TODO BEGIN */
-
+        vmspace = obj_alloc(TYPE_VMSPACE, sizeof(struct vmspace));
         /* LAB 3 TODO END */
         BUG_ON(!vmspace);
 
