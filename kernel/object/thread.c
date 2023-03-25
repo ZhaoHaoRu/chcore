@@ -105,10 +105,25 @@ static u64 load_binary(struct cap_group *cap_group, struct vmspace *vmspace,
         for (i = 0; i < elf->header.e_phnum; ++i) {
                 pmo_cap[i] = -1;
                 if (elf->p_headers[i].p_type == PT_LOAD) {
-                        seg_sz = elf->p_headers[i].p_memsz;
-                        p_vaddr = elf->p_headers[i].p_vaddr;
-                        /* LAB 3 TODO BEGIN */
+                        seg_sz = elf->p_headers[i].p_memsz; // the size of area
+                        p_vaddr = elf->p_headers[i].p_vaddr;  // the virtual addr of the segment
+                        /* LAB 3 TODO BEGIN */ 
+                        seg_map_sz = ROUND_UP(p_vaddr + seg_sz, PAGE_SIZE) - ROUND_DOWN(p_vaddr, PAGE_SIZE);
+                        pmo_cap[i] = create_pmo(seg_map_sz, PMO_DATA, cap_group, &pmo);
+                        BUG_ON(pmo_cap[i] < 0);
 
+                        // memcpy from file to pmo
+                        // offset: the offset of the entry in the file 
+                        BUG_ON(pmo == NULL);
+                        memset(phys_to_virt(pmo->start) + (OFFSET_MASK & p_vaddr), 0, seg_map_sz);
+                        memcpy(phys_to_virt(pmo->start) + (OFFSET_MASK & p_vaddr), bin + elf->p_headers[i].p_offset, elf->p_headers[i].p_filesz);
+                        kdebug("the dst addr: %lx, the src addr: %lx, the size: %d\n", 
+                                phys_to_virt(pmo->start) + (OFFSET_MASK & p_vaddr), 
+                                bin + elf->p_headers[i].p_offset, elf->p_headers[i].p_filesz);
+                        // set the flag for virtual
+                        flags = PFLAGS2VMRFLAGS(elf->p_headers[i].p_flags);
+                        // map the virual address p_vaddr to pmo, add vmregion to vmspace
+                        ret = vmspace_map_range(vmspace, p_vaddr, seg_map_sz, flags, pmo);
                         /* LAB 3 TODO END */
                         BUG_ON(ret != 0);
                 }

@@ -679,19 +679,16 @@ void lab2_test_page_table(void)
                 for (vaddr_t va = 0x100000000; va < 0x100000000 + len;
                      va += 5 * PAGE_SIZE + 0x100) {
                         ret = query_in_pgtbl(pgtbl, va, &pa, &pte);
-                        kdebug("query_in_pgtbl_huge ret: %d, pa: %lx, va: %lx\n", ret, pa, va);
                         lab_assert(ret == 0 && pa == va);
                 }
 
                ret = unmap_range_in_pgtbl_huge(pgtbl, 0x100000000, len);
 //                ret = unmap_range_in_pgtbl(pgtbl, 0x100000000, len);
-                kdebug("unmap range huge in pgtbl ret: %d\n", ret);
                 lab_assert(ret == 0);
 
                 for (vaddr_t va = 0x100000000; va < 0x100000000 + len;
                      va += 5 * PAGE_SIZE + 0x100) {
                         ret = query_in_pgtbl(pgtbl, va, &pa, &pte);
-//                        kdebug("query_in_pgtbl_huge ret: %d\n", ret);
                         lab_assert(ret == -ENOMAPPING);
                 }
 
