@@ -23,4 +23,7 @@
 
 对于`syscall`,根据异常向量表的指示，首先会跳转到`sync_el0_64`对应的位置，首先使用`exception_enter`完成上下文的保存，然后将异常状态表征寄存器`esr_el1`的内容赋给`x25`，比较其`[31:26]`位对应的位置是否和`0b010101`相等，如果相等，说明该异常对应的是AArch64状态下的SVC指令执行，从而跳转到`el0_syscall`的位置进行`syscall`的处理。
 
-在`irq_entry.S`的开头，通过`.extern`引用了`syscall_table`，这是一个由`syscall`处理函数指针构成的数组，
+在`irq_entry.S`的开头，通过`.extern`引用了`syscall_table`，这是一个由`syscall`处理函数指针构成的数组，在`el0_syscall`中的处理逻辑中，会根据`system_table`和`syscall_number`找到对应的`syscall`的`handler`函数，通过`ldr`指令跳转到相应的地方执行，最后将返回值写入栈指针对应的位置，恢复上下文。
+
+## 测试结果
+![pic1](asset/lab3-grade.png)
