@@ -67,13 +67,21 @@ int handle_trans_fault(struct vmspace *vmspace, vaddr_t fault_addr)
 
                 fault_addr = ROUND_DOWN(fault_addr, PAGE_SIZE);
                 /* LAB 3 TODO BEGIN */
-
+                pa = get_page_from_pmo(pmo, index);
                 /* LAB 3 TODO END */
                 if (pa == 0) {
                         /* Not committed before. Then, allocate the physical
                          * page. */
                         /* LAB 3 TODO BEGIN */
+                        vaddr_t kva = (vaddr_t)get_pages(0);    // alloc a page
+                        BUG_ON(kva == 0);
 
+                        pa = virt_to_phys((void *)kva);   // get the physical addr
+                        memset((void *)kva, 0, PAGE_SIZE);
+                        commit_page_to_pmo(pmo, index, pa); // record the physical page allocated to a pmo
+                        // add the mapping
+                        ret = map_range_in_pgtbl(vmspace->pgtbl, fault_addr, pa, PAGE_SIZE, perm);  // perm: the property
+                        BUG_ON(ret != 0);
                         /* LAB 3 TODO END */
 #ifdef CHCORE_LAB3_TEST
                         printk("Test: Test: Successfully map for pa 0\n");
@@ -101,7 +109,9 @@ int handle_trans_fault(struct vmspace *vmspace, vaddr_t fault_addr)
                          * Repeated mapping operations are harmless.
                          */
                         /* LAB 3 TODO BEGIN */
-
+                        // readd the mapping
+                        ret = map_range_in_pgtbl(vmspace->pgtbl, fault_addr, pa, PAGE_SIZE, perm);
+                        BUG_ON(ret != 0);
                         /* LAB 3 TODO END */
 #ifdef CHCORE_LAB3_TEST
                         printk("Test: Test: Successfully map for pa not 0\n");

@@ -40,7 +40,8 @@ void do_page_fault(u64 esr, u64 fault_ins_addr)
         case DFSC_TRANS_FAULT_L3: {
                 int ret;
                 /* LAB 3 TODO BEGIN */
-
+                ret = handle_trans_fault(current_thread->vmspace, fault_addr);
+                // TODO: in lab3, ret can be -ENOMAPPING, maybe some bug here
                 /* LAB 3 TODO END */
                 if (ret != 0) {
                         kinfo("do_page_fault: faulting ip is 0x%lx (real IP),"
@@ -59,7 +60,8 @@ void do_page_fault(u64 esr, u64 fault_ins_addr)
                          * extern void backtrace(void);
                          * backtrace();
                          */
-
+                        
+                        // kinfo("the handle trans fault: %d\n", ret);
                         BUG_ON(ret != 0);
                 }
                 break;
