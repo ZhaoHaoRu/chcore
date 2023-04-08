@@ -61,7 +61,41 @@ struct thread idle_threads[PLAT_CPU_NUM];
 int rr_sched_enqueue(struct thread *thread)
 {
         /* LAB 4 TODO BEGIN */
+        if (thread == NULL || thread->thread_ctx == NULL) {
+                // kdebug("rr_sched_enqueue: the thread information is empty\n");
+                return -EINVAL;
+        }
 
+        // If the thread is IDLE thread, do nothing
+        if (thread->thread_ctx->type == TYPE_IDLE) {
+                // kdebug("rr_sched_enqueue: the thread is IDLE thread\n");
+                return 0;
+        }
+
+        // the state of thread should not be TS_READY
+        if (thread->thread_ctx->state == TS_READY) {
+                return -EINVAL;
+        }
+        
+        // If affinity = NO_AFF, assign the core to the current cpu.
+        u32 cpuid = 0;
+        if (thread->thread_ctx->affinity == NO_AFF) {
+                cpuid = smp_get_cpu_id();
+        } else {
+                // else assign to the given CPU
+                cpuid = thread->thread_ctx->affinity; 
+        }
+
+        if (cpuid >= PLAT_CPU_NUM) {
+                return -EINVAL;
+        }
+        
+        // change the thread status to TS_READY
+        thread->thread_ctx->state = TS_READY;
+        thread->thread_ctx->cpuid = cpuid;
+        list_append(&(thread->ready_queue_node), &(rr_ready_queue_meta[cpuid].queue_head));
+        rr_ready_queue_meta[cpuid].queue_len += 1;
+       
         /* LAB 4 TODO END */
         return 0;
 }
@@ -75,7 +109,27 @@ int rr_sched_enqueue(struct thread *thread)
 int rr_sched_dequeue(struct thread *thread)
 {
         /* LAB 4 TODO BEGIN */
+        if (thread == NULL || thread->thread_ctx == NULL) {
+                return -EINVAL;
+        } 
+        if (thread->thread_ctx->type == TYPE_IDLE) {
+                return 0;
+        }
+        if (thread->thread_ctx->state != TS_READY) {
+                return -EINVAL;
+        }
+        // TODO: if current residual ready queue is empty, just return
+        u32 cpuid = thread->thread_ctx->cpuid;
+        if (rr_ready_queue_meta[cpuid].queue_len == 0) {
+                return 0;
+        } else {
+                list_del(&(thread->ready_queue_node));
+                rr_ready_queue_meta[cpuid].queue_len -= 1;
+        }
 
+        // change the infomation of this thread
+        thread->thread_ctx->state = TS_INTER;
+        kinfo("rr_sched_dequeue: get here\n");
         /* LAB 4 TODO END */
         return 0;
 }
@@ -91,7 +145,15 @@ struct thread *rr_sched_choose_thread(void)
 {
         struct thread *thread = NULL;
         /* LAB 4 TODO BEGIN */
-
+        u32 cpuid = smp_get_cpu_id();
+        // TODO: if current residual ready queue is empty, return idle thread
+        if (rr_ready_queue_meta[cpuid].queue_len == 0) {
+                // kdebug("rr_sched_choose_thread: current residual ready queue is empty, return idle thread\n");
+                thread = &idle_threads[cpuid];
+        } else {
+                thread = list_entry(&(rr_ready_queue_meta[cpuid].queue_head.next), struct thread, ready_queue_node);
+        }
+        rr_sched_dequeue(thread);
         /* LAB 4 TODO END */
         return thread;
 }
@@ -103,7 +165,7 @@ struct thread *rr_sched_choose_thread(void)
 static inline void rr_sched_refill_budget(struct thread *target, u32 budget)
 {
         /* LAB 4 TODO BEGIN */
-
+        target->thread_ctx->sc->budget = budget;
         /* LAB 4 TODO END */
 }
 
@@ -125,7 +187,40 @@ static inline void rr_sched_refill_budget(struct thread *target, u32 budget)
 int rr_sched(void)
 {
         /* LAB 4 TODO BEGIN */
+        u32 cpuid = smp_get_cpu_id();
+        int ret = 0;
+        struct thread *old_thread = current_threads[cpuid];
 
+        if (old_thread != NULL) {
+                BUG_ON(old_thread->thread_ctx == NULL);
+                if (old_thread->thread_ctx->thread_exit_state == TE_EXITING) {
+                        // if the thread is exiting, we shouldn't add it to the waiting queue
+                        old_thread->thread_ctx->thread_exit_state = TE_EXITED;
+                        old_thread->thread_ctx->state = TS_EXIT;
+
+                } else if (old_thread->thread_ctx->state == TS_RUNNING) {
+                        // if the budget of a thread is not zero, we cannot sched it
+                        if (old_thread->thread_ctx->sc->budget != 0) {
+                                old_thread->thread_ctx->sc->budget -= 1;
+                                switch_to_thread(old_thread);
+                                return 0;
+                        }
+                        old_thread->thread_ctx->state = TS_INTER;
+                        rr_sched_refill_budget(old_thread, DEFAULT_BUDGET);
+                        ret = rr_sched_enqueue(old_thread);
+                        // if (ret != 0) {
+                        //         kdebug("rr_sched: something wrong with rr_sched_enqueue\n");
+                        // }
+                } else {
+                        // kinfo("rr_sched: illegal state for old thread\n");
+                }
+        }
+
+        struct thread *new_thread = rr_sched_choose_thread();
+        if (new_thread == NULL || new_thread->thread_ctx == NULL) {
+                return -EINVAL;
+        }
+        switch_to_thread(new_thread);
         /* LAB 4 TODO END */
 
         return 0;

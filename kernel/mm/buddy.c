@@ -83,7 +83,7 @@ static struct page *get_buddy_chunk(struct phys_mem_pool *pool,
         if ((buddy_chunk_addr < pool->pool_start_addr)
             || (buddy_chunk_addr
                 >= (pool->pool_start_addr + pool->pool_mem_size))) {
-                kdebug("the buddy_chunk_addr: %lx, pool->pool_start_addr: %lx, pool->pool_end_addr: %lx\n", buddy_chunk_addr, pool->pool_start_addr, pool->pool_start_addr + pool->pool_mem_size);
+                // kdebug("the buddy_chunk_addr: %lx, pool->pool_start_addr: %lx, pool->pool_end_addr: %lx\n", buddy_chunk_addr, pool->pool_start_addr, pool->pool_start_addr + pool->pool_mem_size);
                 return NULL;
         }
 

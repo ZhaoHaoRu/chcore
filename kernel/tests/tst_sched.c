@@ -124,7 +124,7 @@ void tst_sched_param()
         for (i = 0; i < local_thread_num; i++) {
                 threads[i] = create_test_thread(i, cpuid);
         }
-
+        kinfo("begin sched test\n");
         { // test enqueue
                 BUG_ON(!sched_enqueue(NULL));
                 {
@@ -152,36 +152,40 @@ void tst_sched_param()
                         BUG_ON(!sched_enqueue(threads[0]));
                 }
         }
-
+        kinfo("tst_sched: finish test enqueue\n");
         { // test dequeue
                 BUG_ON(!sched_dequeue(NULL));
+                // kinfo("tst_sched: line 158\n");
                 {
                         thread_ctx = threads[0]->thread_ctx;
                         threads[0]->thread_ctx = NULL;
                         BUG_ON(!sched_dequeue(threads[0]));
                         threads[0]->thread_ctx = thread_ctx;
                 }
-
+                // kinfo("tst_sched: line 165\n");
                 {
                         BUG_ON(sched_dequeue(threads[2]));
+                        // kinfo("tst_sched: line 168\n");
                         BUG_ON(sched_dequeue(threads[1]));
+                        kinfo("tst_sched: line 170\n");
                         BUG_ON(sched_dequeue(threads[3]));
+                        kinfo("tst_sched: line 172\n");
                         BUG_ON(sched_dequeue(threads[0]));
-
+                        kinfo("tst_sched: line 171\n");
                         for (i = 0; i < local_thread_num; i++) {
                                 BUG_ON(threads[i]->thread_ctx->state
                                        != TS_INTER);
                         }
-
+                        kinfo("tst_sched: line 176\n");
                         BUG_ON(!list_empty(
                                 &(rr_ready_queue_meta[cpuid].queue_head)));
                 }
         }
-
+        kinfo("tst_sched: finish test test dequeue\n");
         { // test choose_thread & idle thread
                 idle_thread = rr_sched_choose_thread();
                 BUG_ON(idle_thread->thread_ctx->type != TYPE_IDLE);
-
+                kinfo("tst_sched: 184\n");
                 {
                         BUG_ON(!list_empty(
                                 &(rr_ready_queue_meta[cpuid].queue_head)));
@@ -189,9 +193,12 @@ void tst_sched_param()
                         BUG_ON(!list_empty(
                                 &(rr_ready_queue_meta[cpuid].queue_head)));
                 }
-
+                kinfo("tst_sched: 192\n");
                 {
                         BUG_ON(sched_enqueue(threads[0]));
+                        if (thread[0].thread_ctx == NULL) {
+                                BUG_ON(1);
+                        }
                         BUG_ON(!sched_dequeue(idle_thread));
 
                         thread = rr_sched_choose_thread();
@@ -200,7 +207,7 @@ void tst_sched_param()
                         BUG_ON(!list_empty(
                                 &(rr_ready_queue_meta[cpuid].queue_head)));
                 }
-
+                kinfo("tst_sched: 203\n");
                 {
                         BUG_ON(sched_enqueue(threads[3]));
                         BUG_ON(sched_enqueue(threads[2]));
@@ -220,7 +227,7 @@ void tst_sched_param()
                         BUG_ON(thread != idle_thread);
                 }
         }
-
+        kinfo("tst_sched: finish test choose_thread & idle thread\n");
         { // test sched
                 BUG_ON(sched_enqueue(threads[3]));
                 BUG_ON(sched_enqueue(threads[2]));
@@ -256,7 +263,7 @@ void tst_sched_param()
 
                 BUG_ON(!list_empty(&(rr_ready_queue_meta[cpuid].queue_head)));
         }
-
+        kinfo("tst_sched: finish test sched\n");
         for (i = 0; i < local_thread_num; i++) {
                 free_test_thread(threads[i]);
         }
