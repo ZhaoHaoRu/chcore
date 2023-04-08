@@ -206,9 +206,9 @@ int rr_sched(void)
                         old_thread->thread_ctx->state = TS_INTER;
                         rr_sched_refill_budget(old_thread, DEFAULT_BUDGET);
                         ret = rr_sched_enqueue(old_thread);
-                        // if (ret != 0) {
-                        //         kdebug("rr_sched: something wrong with rr_sched_enqueue\n");
-                        // }
+                        if (ret != 0) {
+                                kdebug("rr_sched: something wrong with rr_sched_enqueue\n");
+                        }
                 } else {
                         kinfo("rr_sched: illegal state for old thread\n");
                 }
@@ -345,3 +345,5 @@ struct sched_ops rr = {.sched_init = rr_sched_init,
                        .sched_enqueue = rr_sched_enqueue,
                        .sched_dequeue = rr_sched_dequeue,
                        .sched_top = rr_top};
+
+

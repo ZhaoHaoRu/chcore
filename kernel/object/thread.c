@@ -417,7 +417,7 @@ void sys_thread_exit(void)
         // the current running thread
         current_thread->thread_ctx->state = TS_EXIT;
         current_thread->thread_ctx->thread_exit_state = TE_EXITED;
-        obj_free(current_thread);
+        current_thread = NULL;
         /* LAB 3 TODO END */
         /* Reschedule */
         sched();
