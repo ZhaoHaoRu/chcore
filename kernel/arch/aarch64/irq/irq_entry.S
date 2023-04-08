@@ -247,6 +247,6 @@ error_el0_32:
 BEGIN_FUNC(__eret_to_thread)
 	mov	sp, x0
 	dmb ish
-	
+	bl unlock_kernel
 	exception_exit
 END_FUNC(__eret_to_thread)

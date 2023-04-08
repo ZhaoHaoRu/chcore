@@ -144,9 +144,6 @@ void handle_entry_c(int type, u64 esr, u64 address)
               address,
               esr_ec);
 
-        // if (type >= SYNC_EL0_64) {
-        //         unlock_kernel();
-        // }
         BUG_ON(1);
 }
 
@@ -169,13 +166,6 @@ void handle_irq(int type)
         plat_handle_irq();
         sched();
         eret_to_thread(switch_context());
-
-        // if (type >= SYNC_EL0_64
-        //     || current_thread->thread_ctx->type == TYPE_IDLE) {
-        //         /* LAB 4 TODO BEGIN */
-        //         unlock_kernel();
-        //         /* LAB 4 TODO END */
-        // }
 
 }
 

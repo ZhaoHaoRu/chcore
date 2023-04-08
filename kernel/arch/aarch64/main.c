@@ -112,8 +112,6 @@ void main(paddr_t boot_flag)
         /* Context switch to the picked thread */
         eret_to_thread(switch_context());
 
-        // unlock_kernel();
-
         /* Should provide panic and use here */
         BUG("[FATAL] Should never be here!\n");
 }
@@ -139,6 +137,4 @@ void secondary_start(void)
         lock_kernel();
         sched();
         eret_to_thread(switch_context());
-
-        // unlock_kernel();
 }

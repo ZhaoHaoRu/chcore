@@ -199,8 +199,7 @@ int rr_sched(void)
 
                 } else if (old_thread->thread_ctx->state == TS_RUNNING) {
                         // if the budget of a thread is not zero, we cannot sched it
-                        if (old_thread->thread_ctx->sc->budget != 0) {
-                                old_thread->thread_ctx->sc->budget -= 1;
+                        if (old_thread->thread_ctx->sc->budget > 0) {
                                 switch_to_thread(old_thread);
                                 return 0;
                         }
@@ -211,7 +210,7 @@ int rr_sched(void)
                         //         kdebug("rr_sched: something wrong with rr_sched_enqueue\n");
                         // }
                 } else {
-                        // kinfo("rr_sched: illegal state for old thread\n");
+                        kinfo("rr_sched: illegal state for old thread\n");
                 }
         }
 
