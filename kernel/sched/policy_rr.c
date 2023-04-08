@@ -113,7 +113,7 @@ int rr_sched_dequeue(struct thread *thread)
                 return -EINVAL;
         } 
         if (thread->thread_ctx->type == TYPE_IDLE) {
-                return 0;
+                return -EINVAL;
         }
         if (thread->thread_ctx->state != TS_READY) {
                 return -EINVAL;
@@ -129,7 +129,6 @@ int rr_sched_dequeue(struct thread *thread)
 
         // change the infomation of this thread
         thread->thread_ctx->state = TS_INTER;
-        kinfo("rr_sched_dequeue: get here\n");
         /* LAB 4 TODO END */
         return 0;
 }
@@ -147,11 +146,11 @@ struct thread *rr_sched_choose_thread(void)
         /* LAB 4 TODO BEGIN */
         u32 cpuid = smp_get_cpu_id();
         // TODO: if current residual ready queue is empty, return idle thread
-        if (rr_ready_queue_meta[cpuid].queue_len == 0) {
+        if (list_empty(&(rr_ready_queue_meta[cpuid].queue_head))) {
                 // kdebug("rr_sched_choose_thread: current residual ready queue is empty, return idle thread\n");
-                thread = &idle_threads[cpuid];
+                thread = &(idle_threads[cpuid]);
         } else {
-                thread = list_entry(&(rr_ready_queue_meta[cpuid].queue_head.next), struct thread, ready_queue_node);
+                thread = list_entry(rr_ready_queue_meta[cpuid].queue_head.next, struct thread, ready_queue_node);
         }
         rr_sched_dequeue(thread);
         /* LAB 4 TODO END */

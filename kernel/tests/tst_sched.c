@@ -162,10 +162,10 @@ void tst_sched_param()
                         BUG_ON(!sched_dequeue(threads[0]));
                         threads[0]->thread_ctx = thread_ctx;
                 }
-                // kinfo("tst_sched: line 165\n");
+                kinfo("tst_sched: line 165\n");
                 {
                         BUG_ON(sched_dequeue(threads[2]));
-                        // kinfo("tst_sched: line 168\n");
+                        kinfo("tst_sched: line 168\n");
                         BUG_ON(sched_dequeue(threads[1]));
                         kinfo("tst_sched: line 170\n");
                         BUG_ON(sched_dequeue(threads[3]));
@@ -193,12 +193,9 @@ void tst_sched_param()
                         BUG_ON(!list_empty(
                                 &(rr_ready_queue_meta[cpuid].queue_head)));
                 }
-                kinfo("tst_sched: 192\n");
+                kinfo("tst_sched: 196\n");
                 {
                         BUG_ON(sched_enqueue(threads[0]));
-                        if (thread[0].thread_ctx == NULL) {
-                                BUG_ON(1);
-                        }
                         BUG_ON(!sched_dequeue(idle_thread));
 
                         thread = rr_sched_choose_thread();
