@@ -210,7 +210,7 @@ int rr_sched(void)
                                 kdebug("rr_sched: something wrong with rr_sched_enqueue\n");
                         }
                 } else {
-                        kinfo("rr_sched: illegal state for old thread\n");
+                        kdebug("rr_sched: another state for old thread\n");
                 }
         }
 
