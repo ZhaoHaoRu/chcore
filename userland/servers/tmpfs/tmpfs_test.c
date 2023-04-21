@@ -55,15 +55,18 @@ int test_mkdir() {
     int err;
     err = tmpfs_mkdir("/test_dir", 0);
     if(err) {
+        printf("test mkdir, fail at line 58\n");
         return err;
     }
     err = tmpfs_mkdir("/test_dir/test_dir2", 0);
     if(err) {
+        printf("test mkdir, fail at line 63\n");
         return err;
     }
     err = tmpfs_mkdir("/test_dir/test_dir3", 0);
     struct inode * inode = tfs_open_path("/test_dir");
     if(!inode) {
+        printf("test mkdir, fail at line 69\n");
         return -1;
     }
     list_dir(inode);
