@@ -136,6 +136,24 @@ struct dentry *new_dent(struct inode *inode, const char *name,
 	return dent;
 }
 
+// look up a file called `name` under the inode `dir` 
+// and return the dentry of this file
+struct dentry *tfs_lookup(struct inode *dir, const char *name,
+				 size_t len)
+{
+	u64 hash = hash_chars(name, len);
+	struct dentry *dent;
+	struct hlist_head *head;
+
+	head = htable_get_bucket(&dir->dentries, (u32) hash);
+
+	for_each_in_hlist(dent, node, head) {
+		if (dent->name.len == len && 0 == strcmp(dent->name.str, name))
+			return dent;
+	}
+	return NULL;
+}
+
 // this function create a file (directory if `mkdir` == true, otherwise regular
 // file) and its size is `len`. You should create an inode and corresponding 
 // dentry, then add dentey to `dir`'s htable by `htable_add`.
@@ -151,7 +169,11 @@ static int tfs_mknod(struct inode *dir, const char *name, size_t len, int mkdir)
 		WARN("mknod with len of 0");
 		return -ENOENT;
 	}
+
 	/* LAB 5 TODO BEGIN */
+	if (tfs_lookup(dir, name ,len)) {
+        return -EEXIST;
+	}
 	if (mkdir) {
 		inode = new_dir();	
 	} else {
@@ -179,23 +201,7 @@ int tfs_creat(struct inode *dir, const char *name, size_t len)
 	return tfs_mknod(dir, name, len, 0 /* mkdir */ );
 }
 
-// look up a file called `name` under the inode `dir` 
-// and return the dentry of this file
-struct dentry *tfs_lookup(struct inode *dir, const char *name,
-				 size_t len)
-{
-	u64 hash = hash_chars(name, len);
-	struct dentry *dent;
-	struct hlist_head *head;
 
-	head = htable_get_bucket(&dir->dentries, (u32) hash);
-
-	for_each_in_hlist(dent, node, head) {
-		if (dent->name.len == len && 0 == strcmp(dent->name.str, name))
-			return dent;
-	}
-	return NULL;
-}
 
 // Walk the file system structure to locate a file with the pathname stored in `*name`
 // and saves parent dir to `*dirat` and the filename to `*name`.
@@ -265,7 +271,6 @@ int tfs_namex(struct inode **dirat, const char **name, int mkdir_p)
 		}
 		++i;
  	}
-	// TODO: what need to do with last character?
 	/* LAB 5 TODO END */
 
 	/* we will never reach here? */
@@ -344,8 +349,7 @@ ssize_t tfs_file_write(struct inode * inode, off_t offset, const char *data,
 	int err;
 
 	/* LAB 5 TODO BEGIN */
-	u64 upper_bound = ((inode->size + PAGE_SIZE - 1) / PAGE_SIZE) * PAGE_SIZE;
-	while (cur_off < upper_bound && cur_off < offset + size) {
+	while (cur_off < inode->size) {
 		page_no = cur_off / PAGE_SIZE;
 		page_off = cur_off % PAGE_SIZE;
 		page = radix_get(&inode->data, page_no);
@@ -359,12 +363,14 @@ ssize_t tfs_file_write(struct inode * inode, off_t offset, const char *data,
 	while (cur_off < offset + size) {
 		page_no = cur_off / PAGE_SIZE;
 		page_off = cur_off % PAGE_SIZE;
-		err = radix_add(&inode->data, page_no, data + (cur_off - offset));
+		page = malloc(PAGE_SIZE);
+		err = radix_add(&inode->data, page_no, page);
 		BUG_ON(err != 0);
 		page_size = PAGE_SIZE - page_off < size - (cur_off - offset) ? PAGE_SIZE - page_off : size - (cur_off - offset);
+		memcpy(page + page_off, data + cur_off - offset, page_size);
 		cur_off += page_size;
 	}
-	inode->size = inode->size > cur_off + size ? inode->size : cur_off + size;
+	inode->size = inode->size > cur_off + size ? inode->size : offset + size;
 	/* LAB 5 TODO END */
 
 	return cur_off - offset;
@@ -387,7 +393,7 @@ ssize_t tfs_file_read(struct inode * inode, off_t offset, char *buff,
 
 	/* LAB 5 TODO BEGIN */
 	memset(buff, '\0', size);
-	while (cur_off < inode->size) {
+	while (cur_off < inode->size && cur_off - offset < size) {
 		page_no = cur_off / PAGE_SIZE;
 		page_off = cur_off % PAGE_SIZE;
 		page = radix_get(&inode->data, page_no);
