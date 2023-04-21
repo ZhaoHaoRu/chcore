@@ -59,7 +59,7 @@ int main(int argc, char *argv[], char *envp[])
                 __chcore_sys_wait_sem(exit_sem, 1);
                 global_exit++;
         }
-        printf("Global Count %d\n", global_counter);
+        printf("Global Count %d %d\n", global_counter, TEST_NUM * THD_PER_CPU * PLAT_CPU_NUM);
         if (global_counter == TEST_NUM * THD_PER_CPU * PLAT_CPU_NUM)
                 printf("test_mutex passed!\n");
         else
