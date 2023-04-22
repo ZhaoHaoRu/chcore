@@ -141,6 +141,7 @@ struct dentry *new_dent(struct inode *inode, const char *name,
 struct dentry *tfs_lookup(struct inode *dir, const char *name,
 				 size_t len)
 {
+	// printf("[DEBUG] begin tfs_lookup, name: %s, dir: %lx\n", name, dir);
 	u64 hash = hash_chars(name, len);
 	struct dentry *dent;
 	struct hlist_head *head;
@@ -148,9 +149,12 @@ struct dentry *tfs_lookup(struct inode *dir, const char *name,
 	head = htable_get_bucket(&dir->dentries, (u32) hash);
 
 	for_each_in_hlist(dent, node, head) {
+		// printf("the dent->name.len: %d, current len: %d, the dent->name.str: %s, current name: %s, cmp result: %d\n", dent->name.len, len, dent->name.str, name, strcmp(dent->name.str, name));
 		if (dent->name.len == len && 0 == strcmp(dent->name.str, name))
 			return dent;
 	}
+
+	// printf("[DEBUG] tfs_lookup: reach line 155\n");
 	return NULL;
 }
 
@@ -243,28 +247,27 @@ int tfs_namex(struct inode **dirat, const char **name, int mkdir_p)
 	i = 0;
 	memset(buff, '\0', MAX_FILENAME_LEN + 1);
 	int length = strlen(*name);
-	printf("the the name: %s, length: %d\n", *name, length);
 	while (i <= length) {
-		if (*(*name + i) == '/' || i == length) {
+		if (*(*name + i) == '/') {		// find a directory
 			buff[ptr] = '\0';
-			printf("current name: %s, the size: %d\n", buff, strlen(buff));
-			dent = tfs_lookup(*dirat, buff, strlen(buff));
+			dent = tfs_lookup(*dirat, buff, ptr);
 			if (dent == NULL) {
 				if (mkdir_p) {
-					err = tfs_mkdir(*dirat, buff, strlen(buff));
+					err = tfs_mkdir(*dirat, buff, ptr);
 					if (err != 0) {
-						printf("[DEBUG] error at line 244: %d\n", err);
 						return err;
 					}
 				} else {
-					printf("[DEBUG] error at line 248: %d\n");
-					return -EINVAL;
+					return -ENOENT;
 				}
-				dent = tfs_lookup(*dirat, buff, strlen(buff));
+				dent = tfs_lookup(*dirat, buff, ptr);
 			} 
 			*dirat = dent->inode;
 			ptr = 0;
 			memset(buff, '\0', MAX_FILENAME_LEN + 1);
+		
+		} else if (i == length) {		// it is a file entry, reset the name as this entry
+			*name = *name + length - ptr;
 		} else {
 			buff[ptr] = *(*name + i);
 			++ptr;
@@ -485,14 +488,16 @@ struct inode *tfs_open_path(const char *path)
 	if (*path == '/' && !*(path + 1))
 		return tmpfs_root;
 
-	printf("[DEBUG] the path name: %s\n", leaf);
+	// printf("[DEBUG] the path name: %s\n", leaf);
 	err = tfs_namex(&dirat, &leaf, 0);
 	if (err) {
-		printf("[DEBUG] error at line 478\n");
+		// printf("[DEBUG] error at line 478\n");
 		return NULL;
 	}
 
+	// printf("[DEBUG] begin tfs_open_path tfs_lookup, name: %s\n", path);
 	dent = tfs_lookup(dirat, leaf, strlen(leaf));
+	// printf("[DEBUG] end tfs_open_path tfs_lookup\n");
 	return dent ? dent->inode : NULL;
 }
 

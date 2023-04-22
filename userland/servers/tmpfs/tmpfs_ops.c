@@ -77,7 +77,16 @@ int fs_creat(const char *path)
 	BUG_ON(*path != '/');
 
 	/* LAB 5 TODO BEGIN */
-
+	// if exist, don't need to create
+	err = tfs_namex(&dirat, &leaf, 1);
+	if (err) {
+		return err;
+	}
+	// // printf("[DEBUG] create file name: %s\n", leaf);
+	err = tfs_creat(dirat, leaf, strlen(leaf));
+	if (err) {
+		return err;
+	}
 	/* LAB 5 TODO END */
 	return 0;
 
@@ -99,7 +108,12 @@ int tmpfs_unlink(const char *path, int flags)
 	BUG_ON(*path != '/');
 
 	/* LAB 5 TODO BEGIN */
-
+	// create directory while finding
+	err = tfs_namex(&dirat, &leaf, 0);
+	if (err) {
+		return err;
+	}
+	err = tfs_remove(dirat, leaf, strlen(leaf));
 	/* LAB 5 TODO END */
 	return err;
 }
@@ -119,7 +133,11 @@ int tmpfs_mkdir(const char *path, mode_t mode)
 	BUG_ON(*path != '/');
 
 	/* LAB 5 TODO BEGIN */
-
+	err = tfs_namex(&dirat, &leaf, 1);
+	if (err) {
+		return err;
+	}
+	err = tfs_mkdir(dirat, leaf, strlen(leaf));
 	/* LAB 5 TODO END */
 	return err;
 }
