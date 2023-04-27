@@ -103,6 +103,7 @@ static int lab5_stdio_file_printf_scanf () {
 
     FILE * pFile;
     pFile = fopen("/myfile2.txt", "w");
+	printf("[DEBUG] the raw date for fprintf: %d\n", data);
     fprintf(pFile, "fprintf %s %d\n", __func__, data);
     fclose(pFile);
 

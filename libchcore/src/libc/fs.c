@@ -52,7 +52,7 @@ char* num2str(int val) {
 	char tmp[10] = {'\0'};
 	int i = 0;
 	while (val > 0) {
-		tmp[i] = val + '0';
+		tmp[i] = val % 10 + '0';
 		i += 1;
 		val /= 10;
 	}
@@ -311,6 +311,7 @@ int fprintf(FILE * f, const char * fmt, ...) {
 			++fmt_ptr;
 			if (*(fmt_ptr + fmt) == 'd') {
 				int current_arg = va_arg(arg, int);
+				printf("[DEBUG] current int arg: %d\n", current_arg);
 				char* int_str = num2str(current_arg);
 				memcpy(buf + ptr, int_str, strlen(int_str));
 				ptr += strlen(int_str);
