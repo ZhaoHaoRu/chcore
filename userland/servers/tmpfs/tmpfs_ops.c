@@ -36,7 +36,6 @@ int tmpfs_open(char *path, int flags, int mode, unsigned long *vnode_id, size_t 
 	if (inode) {
 		*vnode_id = (unsigned long)inode;
 		*vnode_type = inode->type == FS_REG ? FS_NODE_REG : FS_NODE_DIR;
-		printf("[DEBUG] the inode size: %ld\n", inode->size);
 		*vnode_size = inode->size;
 		*vnode_private = inode;
 		ret = 0;

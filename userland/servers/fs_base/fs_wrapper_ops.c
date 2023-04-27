@@ -91,7 +91,6 @@ int fs_wrapper_open(u64 client_badge, struct ipc_msg *ipc_msg, struct fs_request
 	}
 
 	vnode = get_fs_vnode_by_id(vnode_id);
-	printf("[DEBUG] the entry off: %d\n", entry_off);
 	if (NULL != vnode) {
 		/* Update vnode and entry */
 		inc_ref_fs_vnode(vnode);
@@ -103,7 +102,6 @@ int fs_wrapper_open(u64 client_badge, struct ipc_msg *ipc_msg, struct fs_request
 	}
 
 	/* After server handling the open request, mapping new_fd to fid */
-	printf("mapping new_fd %d to fid %d\n", new_fd, client_badge);
 	fs_wrapper_set_server_entry(client_badge, new_fd, entry_id);
 
 

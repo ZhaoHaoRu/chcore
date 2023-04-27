@@ -276,7 +276,21 @@ void fs_scan(char *path)
 		return;
 	}
 
-	demo_getdents(fd);
+	char name[BUFLEN];
+	char scan_buf[BUFLEN];
+	int offset;
+	struct dirent *p;
+
+	ret = getdents(fd, scan_buf, BUFLEN);
+
+	for (offset = 0; offset < ret; offset += p->d_reclen) {
+		p = (struct dirent *)(scan_buf + offset);
+		get_dent_name(p, name);
+		if (*name == '.') {
+			continue;
+		}
+		printf("%s ", name);
+	}
 	/* LAB 5 TODO END */
 }
 
