@@ -81,11 +81,12 @@ int fs_wrapper_get_server_entry(u64 client_badge, int fd)
 
 	/* Validate fd */
 	BUG_ON(fd < 0 || fd > MAX_SERVER_ENTRY_PER_CLIENT);
-
-	for_each_in_list(n, struct server_entry_node, node, &server_entry_mapping)
+	printf("fs_wrapper_get_server_entry: client_badge: %d, fd: %d\n", client_badge, fd);
+	for_each_in_list(n, struct server_entry_node, node, &server_entry_mapping) 
+		{printf("n->client_badge: %d, client_badge: %d\n", n->client_badge, client_badge);
 		if (n->client_badge == client_badge)
 			return n->fd_to_fid[fd];
-
+		}
 	return -1;
 }
 
@@ -182,6 +183,7 @@ void fs_server_dispatch(struct ipc_msg *ipc_msg, u64 client_badge)
 	switch(fr->req) {
 
 	case FS_REQ_OPEN:
+		printf("fs_server_dispatch: FS_REQ_OPEN, the client_badge: %d\n", client_badge);
 		ret = fs_wrapper_open(client_badge, ipc_msg, fr);
 		break;
 	case FS_REQ_READ:

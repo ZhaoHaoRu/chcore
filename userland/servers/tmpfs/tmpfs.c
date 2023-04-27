@@ -343,6 +343,7 @@ ssize_t tfs_file_write(struct inode * inode, off_t offset, const char *data,
 		       size_t size)
 {
 	BUG_ON(inode->type != FS_REG);
+	printf("[DEBUG] offset %ld, size %ld, inode->size: %ld\n", offset, size, inode->size);
 	BUG_ON(offset > inode->size);
 
 	u64 page_no, page_off, page_size;
@@ -389,6 +390,7 @@ ssize_t tfs_file_read(struct inode * inode, off_t offset, char *buff,
 	BUG_ON(inode->type != FS_REG);
 	BUG_ON(offset > inode->size);
 
+	printf("[DEBUG] offset %ld, size %ld, inode->size: %ld\n", offset, size, inode->size);
 	u64 page_no, page_off, page_size;
 	u64 cur_off = offset;
 	size_t to_read;

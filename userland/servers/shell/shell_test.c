@@ -12,7 +12,7 @@
 
 #include "shell.h"
 
-#include <stdio.h>
+#include <libc/stdio.h>
 #include <string.h>
 #include <malloc.h>
 #include <chcore/ipc.h>
@@ -71,20 +71,27 @@ static int lab5_stdio_file_read_write () {
     memset(wbuf, 0x0, sizeof(wbuf));
     memset(rbuf, 0x0, sizeof(rbuf));
     for(int i = 0; i < sizeof(wbuf); ++i) {
-        wbuf[i] = (char) i;
+        wbuf[i] = (char) (i % 26 + 'a');
     }
     FILE * pFile;
     pFile = fopen("/myfile.txt", "w");
+	printf("[DEBUG] %s %d\n", __func__, 78);
     fwrite(wbuf, sizeof(char) , sizeof(wbuf), pFile);
+	printf("[DEBUG] %s %d\n", __func__, 80);
     fclose(pFile);
-
+	printf("[DEBUG] %s %d\n", __func__, 82);
     pFile = fopen("/myfile.txt", "r");
+	printf("[DEBUG] %s %d\n", __func__, 84);
     int cnt;
     do {
+		printf("[DEBUG] the previous content: %s\n", rbuf);
         cnt = fread(rbuf, sizeof(char), sizeof(rbuf), pFile);
+		printf("[DEBUG] fread size: %d, the content: %s\n", cnt, rbuf);
     } while(cnt > 0);
     fclose(pFile);
-
+	printf("the target: %s\n", (char*)wbuf + sizeof(wbuf) - sizeof(rbuf));
+	printf("the result: %s\n", rbuf);
+	printf("[DEBUG] the compare result: %d\n", memcmp(rbuf, (char*)wbuf + sizeof(wbuf) - sizeof(rbuf), sizeof(rbuf)));
     return memcmp(rbuf, (char*)wbuf + sizeof(wbuf) - sizeof(rbuf), sizeof(rbuf));
 }
 

@@ -104,7 +104,8 @@ struct ipc_msg *ipc_create_msg(struct ipc_struct *icb, u64 data_len,
 }
 
 char *ipc_get_msg_data(struct ipc_msg *ipc_msg)
-{
+{       
+        // printf("[DEBUG] the data_offset: %d, the msg: %s\n", ipc_msg->data_offset, (char *)ipc_msg + ipc_msg->data_offset);
         return (char *)ipc_msg + ipc_msg->data_offset;
 }
 
@@ -126,6 +127,7 @@ u64 ipc_get_msg_cap(struct ipc_msg *ipc_msg, u64 cap_slot_index)
 int ipc_set_msg_data(struct ipc_msg *ipc_msg, void *data, u64 offset, u64 len)
 {
         if ((offset + len < offset) || (offset + len > ipc_msg->data_len)) {
+                printf("[DEBUG] offset: %d, the len: %d, the data_len: %d\n", offset, len, ipc_msg->data_len);
                 printf("%s failed due to overflow.\n", __func__);
                 return -1;
         }
