@@ -48,7 +48,7 @@ int str2num(const char *str, int *pos) {
 	return base;
 }
 
-char* num2str(int val) {
+void num2str(int val, char *result) {
 	char tmp[10] = {'\0'};
 	int i = 0;
 	while (val > 0) {
@@ -57,14 +57,11 @@ char* num2str(int val) {
 		val /= 10;
 	}
 	int len = strlen(tmp);
-	char *result = (char*)malloc(len + 1);
-	memset(result, '\0', len + 1);
 	i = 0;
 	for (int j = len - 1; j >= 0; --j) {
 		result[j] = tmp[i];
 		++i;
 	}
-	return result;
 }
 
 int get_mode(const char *mode) {
@@ -206,7 +203,7 @@ size_t fread(void * destv, size_t size, size_t nmemb, FILE * f) {
 		return -1;
 	}
 	
-	struct ipc_msg *new_msg = ipc_create_msg(fs_ipc_struct, sizeof(struct fs_request), 0);
+	struct ipc_msg *new_msg = ipc_create_msg(fs_ipc_struct, sizeof(struct fs_request) + size * nmemb + 2, 0);
 	if (new_msg == NULL) {
 		printf("[fread] create new msg fail\n");
 		return -1;
@@ -312,7 +309,9 @@ int fprintf(FILE * f, const char * fmt, ...) {
 			if (*(fmt_ptr + fmt) == 'd') {
 				int current_arg = va_arg(arg, int);
 				printf("[DEBUG] current int arg: %d\n", current_arg);
-				char* int_str = num2str(current_arg);
+				char int_str[10] = {'\0'};
+				num2str(current_arg, int_str);
+				// char* int_str = num2str(current_arg);
 				memcpy(buf + ptr, int_str, strlen(int_str));
 				ptr += strlen(int_str);
 			} else if (*(fmt_ptr + fmt) == 's') {
@@ -329,8 +328,8 @@ int fprintf(FILE * f, const char * fmt, ...) {
 	}
 	printf("[fprintf] the format string is %s\n", buf);
 	int ret = fwrite(buf, 1, strlen(buf), f);
+	va_end(arg);
 	return ret;
 	/* LAB 5 TODO END */
-    return 0;
 }
 

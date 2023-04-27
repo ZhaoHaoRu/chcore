@@ -45,6 +45,7 @@ struct ipc_struct *ipc_register_client(int server_thread_cap)
 {
         int conn_cap, retry_times = RETRY_UPPER_BOUND;
         struct ipc_struct *ipc_struct = malloc(sizeof(struct ipc_struct));
+        // printf("[DEBUG] the ipc register client addr: %lx, the size: %x\n", ipc_struct, sizeof(struct ipc_struct));
         // Assign a unique id for each client
         int client_id = __sync_fetch_and_add(&client_ipc_num, 1);
         struct ipc_vm_config vm_config;
@@ -88,12 +89,14 @@ struct ipc_msg *ipc_create_msg(struct ipc_struct *icb, u64 data_len,
 {
         ipc_msg_t *ipc_msg;
         int i;
-
+        // printf("[DEBUG] ipc_create_msg line 91, the address: %lx\n", icb);
+        // printf("the lock: %d\n", icb->ipc_lock.val);
         spinlock_lock(&icb->ipc_lock);
+        // printf("[DEBUG] ipc_create_msg line 93, the address: %lx\n", icb);
         ipc_msg = (ipc_msg_t *)icb->shared_buf;
         ipc_msg->data_len = data_len;
         ipc_msg->cap_slot_number = cap_slot_number;
-
+        // printf("[DEBUG] ipc_create_msg: %d\n", data_len);
         ipc_msg->data_offset = sizeof(*ipc_msg);
         ipc_msg->cap_slots_offset = ipc_msg->data_offset + data_len;
         memset(ipc_get_msg_data(ipc_msg), 0, data_len);

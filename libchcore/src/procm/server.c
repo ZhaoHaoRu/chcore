@@ -11,7 +11,7 @@
  */
 
 #include "server.h"
-
+#include <stdio.h>
 #include <chcore/types.h>
 #include <chcore/assert.h>
 #include <chcore/internal/server_caps.h>
@@ -23,6 +23,7 @@ struct ipc_struct *get_procm_server(void)
         if (!procm_ipc_struct) {
                 int procm_cap = __chcore_get_procm_cap();
                 chcore_assert(procm_cap >= 0);
+                // printf("[DEBUG] create new procm_ipc_struct, the procm_cap: %d\n", procm_cap);
                 procm_ipc_struct = ipc_register_client(procm_cap);
                 chcore_assert(procm_ipc_struct);
         }

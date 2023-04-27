@@ -47,7 +47,9 @@ static void ipc_dispatch(struct ipc_msg *ipc_msg, u64 client_pid)
                         }
                 }
                 chcore_bug_on(!path_valid);
+                printf("[DEBUG] ipc_dispatch the path: %s\n", ipc_data->spawn.args.path);
                 pid = spawn(ipc_data->spawn.args.path, &mt_cap);
+                printf("[DEBUG] ipc_dispatch line 51\n");
                 if (pid > 0) {
                         ipc_data->spawn.returns.pid = pid;
                         ipc_msg->cap_slot_number = 1;

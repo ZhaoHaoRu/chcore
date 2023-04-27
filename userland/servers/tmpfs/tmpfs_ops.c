@@ -232,6 +232,7 @@ int tmpfs_get_size(char* path) {
 	struct inode *inode;
 	int ret = -ENOENT;
 
+	printf("the path: %s\n", path);
 	BUG_ON(!path);
 	BUG_ON(*path != '/');
 

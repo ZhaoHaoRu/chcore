@@ -31,23 +31,35 @@ static int tmpfs_scan_pmo_cap;
 int fs_server_cap;
 
 #define BUFLEN	4096
+#define READLEN 256
 
 struct ipc_struct *fs_ipc_struct = NULL;
 
 /* supply functions */
-int open_file(const char *path, int fd)
-{
-        struct ipc_msg *ipc_msg = ipc_create_msg(
-                fs_ipc_struct, sizeof(struct fs_request), 0);
-        chcore_assert(ipc_msg);
-        struct fs_request *req = (struct fs_request *)ipc_get_msg_data(ipc_msg);
-        req->req = FS_REQ_OPEN;
-        strcpy(req->open.pathname, path);
-        req->open.flags = O_RDONLY;
-        req->open.new_fd = fd;
-        int ret = ipc_call(fs_ipc_struct, ipc_msg);
-        ipc_destroy_msg(fs_ipc_struct, ipc_msg);
-        return ret;
+int open_file(const char *path, int fd) {
+	struct ipc_msg *ipc_msg = ipc_create_msg(
+			fs_ipc_struct, sizeof(struct fs_request), 0);
+	chcore_assert(ipc_msg);
+	struct fs_request *req = (struct fs_request *)ipc_get_msg_data(ipc_msg);
+	req->req = FS_REQ_OPEN;
+	strcpy(req->open.pathname, path);
+	req->open.flags = O_RDONLY;
+	req->open.new_fd = fd;
+	int ret = ipc_call(fs_ipc_struct, ipc_msg);
+	ipc_destroy_msg(fs_ipc_struct, ipc_msg);
+	return ret;
+}
+
+int close_file(int fd) {
+	struct ipc_msg *ipc_msg = ipc_create_msg(
+			fs_ipc_struct, sizeof(struct fs_request), 0);
+	chcore_assert(ipc_msg);
+	struct fs_request *req = (struct fs_request *)ipc_get_msg_data(ipc_msg);
+	req->req = FS_REQ_CLOSE;
+	req->close.fd = fd;
+	int ret = ipc_call(fs_ipc_struct, ipc_msg);
+	ipc_destroy_msg(fs_ipc_struct, ipc_msg);
+	return ret;
 }
 
 static void connect_tmpfs_server(void)
@@ -127,10 +139,10 @@ void demo_getdents(int fd)
 	int ret = getdents(fd, scan_buf, BUFLEN);
 
 	for (offset = 0; offset < ret; offset += p->d_reclen) {
-			p = (struct dirent *)(scan_buf + offset);
-			get_dent_name(p, name);
-			printf("The name is %s \n", name);
-		}
+		p = (struct dirent *)(scan_buf + offset);
+		get_dent_name(p, name);
+		printf("The name is %s \n", name);
+	}
 }
 
 
@@ -170,6 +182,7 @@ int do_complement(char *buf, char *complement, int complement_time)
 		if (*name == '.') {
 			continue;
 		}
+		// printf("[DEBUG] j: %d, complement_time: %d, name: %s\n", j, complement_time, name);
 		if (j == complement_time) {
 			strcpy(complement, name);
 			r = 0;
@@ -177,6 +190,7 @@ int do_complement(char *buf, char *complement, int complement_time)
 		}
 		++j;
 	}
+	// printf("[DEBUG] the complement: %s\n", complement);
 	/* LAB 5 TODO END */
 
 	return r;
@@ -210,9 +224,9 @@ char *readline(const char *prompt)
 		/* Fill buf and handle tabs with do_complement(). */
 		if (c == '\t') {
 			do_complement(buf, complement, complement_time);
-			printf("%s\n", buf);
+			printf("%s\n", complement);
 			++complement_time;
-		} else if (c == '\0' || c == '\n') {
+		} else if (c == '\0' || c == '\n' || c == '\r') {
 			putc(c);
 			break;
 		} else {
@@ -240,25 +254,32 @@ void print_file_content(char* path)
 	int ret = open_file(path, fd);
 	if (ret < 0) {
 		printf("[print_file_content] the file not exist\n");
+		chcore_bug("[print_file_content] the file not exist\n");
 	}
 	
 	int reach_end = false;
 	while (!reach_end) {
 		struct ipc_msg *ipc_msg = ipc_create_msg(
-			fs_ipc_struct, sizeof(struct fs_request), 0);
+			fs_ipc_struct, sizeof(struct fs_request) + READLEN + 2, 0);
 		chcore_assert(ipc_msg);
 		struct fs_request *req = (struct fs_request *)ipc_get_msg_data(ipc_msg);
 		req->req = FS_REQ_READ;
 		req->read.fd = fd;
-		req->read.count = BUFLEN;
+		req->read.count = READLEN;
 		ret = ipc_call(fs_ipc_struct, ipc_msg);
-		printf("%s", ipc_get_msg_data(ipc_msg));
-		if (ret != BUFLEN) {
+		// printf("%s", ipc_get_msg_data(ipc_msg));
+		if (ret > 0) {
+			printf("%s", ipc_get_msg_data(ipc_msg));
+		}
+		if (ret != READLEN) {
 			reach_end = true;
 		}
 		ipc_destroy_msg(fs_ipc_struct, ipc_msg);
 	}
-	printf("\n");
+	ret = close_file(fd);
+	if (ret < 0) {
+		printf("[print_file_content] close file fail\n");
+	}
 	/* LAB 5 TODO END */
 
 }
@@ -327,7 +348,7 @@ int do_echo(char *cmdline)
 	while (*(cmdline + pos) == ' ') {
 		++pos;
 	}
-	printf("%s\n", cmdline + pos);
+	printf("%s", cmdline + pos);
 	/* LAB 5 TODO END */
 	return 0;
 }
@@ -377,13 +398,13 @@ int builtin_cmd(char *cmdline)
 int run_cmd(char *cmdline)
 {
 	int cap = 0;
-	/* Hint: Function chcore_procm_spawn() could be used here. */
-	/* LAB 5 TODO BEGIN */
+	// /* Hint: Function chcore_procm_spawn() could be used here. */
+	// /* LAB 5 TODO BEGIN */
 	printf("%s\n", cmdline);
+	// printf("[DEBUG] the run cmd: %s\n", new_buf);
 	int ret = chcore_procm_spawn(cmdline, &cap);
 	return ret;
 	/* LAB 5 TODO END */
-	return 0;
 }
 
 
@@ -393,3 +414,4 @@ void connect_fs(void)
 	connect_tmpfs_server();
 
 }
+
