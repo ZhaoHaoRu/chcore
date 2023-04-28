@@ -86,14 +86,11 @@ int getstr(const char *str, int pos) {
 
 // abstract the fs_open_file function to reduce duplicate code
 int fs_open_file(const char *filename, int fd, const char *mode) {
-	printf("[DEBUG] begin fs_open_file\n");
 	struct ipc_msg *new_msg = ipc_create_msg(fs_ipc_struct, sizeof(struct fs_request), 0);
-	printf("[DEBUG] create new msg\n");
 	if (new_msg == NULL) {
 		printf("[fs_open_file] create new msg fail\n");
 	}
 	struct fs_request *req = (struct fs_request*)ipc_get_msg_data(new_msg);
-	printf("[DEBUG] get msg data\n");
 	req->req = FS_REQ_OPEN;
 	req->open.new_fd = fd;
 	memcpy(req->open.pathname, filename, FS_REQ_PATH_BUF_LEN);

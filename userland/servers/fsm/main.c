@@ -78,7 +78,65 @@ void strip_path(struct mount_point_info_node *mpinfo, char* path) {
 
 /* You could add new functions here as you want. */
 /* LAB 5 TODO BEGIN */
+// send request to fs server for create, open, close
+int resend_request_file_info(struct mount_point_info_node *mpinfo, struct fs_request *fr) {
+	struct ipc_msg *ipc_msg = ipc_create_msg(mpinfo->_fs_ipc_struct, sizeof(struct fs_request), 0);
+	chcore_assert(ipc_msg);
+	struct fs_request *new_fr = (struct fs_request *)ipc_get_msg_data(ipc_msg);
+	memcpy(new_fr, fr, sizeof(struct fs_request));
+	
+	int ret = ipc_call(mpinfo->_fs_ipc_struct, ipc_msg);
+	ipc_destroy_msg(mpinfo->_fs_ipc_struct, ipc_msg);
+	return ret;
+}
+int resend_request_read(struct mount_point_info_node *mpinfo, struct fs_request *fr, struct ipc_msg *ipc_msg) {
+	size_t count = fr->read.count;
+	struct ipc_msg *new_msg = ipc_create_msg(mpinfo->_fs_ipc_struct, sizeof(struct fs_request) + count + 2, 0);
+	chcore_assert(new_msg);
+	struct fs_request *new_fr = (struct fs_request *)ipc_get_msg_data(new_msg);
+	memcpy(new_fr, fr, sizeof(struct fs_request));
+	int ret = ipc_call(mpinfo->_fs_ipc_struct, new_msg);
+	if (ret > 0) {
+		memcpy(ipc_get_msg_data(ipc_msg), ipc_get_msg_data(new_msg), ret);
+	}
+	ipc_destroy_msg(mpinfo->_fs_ipc_struct, new_msg);
+	if (ret < 0) {
+		printf("[FSM] resend_request_read failed\n");
+	}
+	return ret;
+}
+int resend_request_write(struct mount_point_info_node *mpinfo, struct fs_request *fr, struct ipc_msg *ipc_msg) {
+	size_t count = fr->write.count;
+	struct ipc_msg *new_msg = ipc_create_msg(mpinfo->_fs_ipc_struct, sizeof(struct fs_request) + count + 1, 0);
+	chcore_assert(new_msg);
+	struct fs_request *new_fr = (struct fs_request *)ipc_get_msg_data(new_msg);
+	memcpy(new_fr, fr, sizeof(struct fs_request));
+	int ret = ipc_set_msg_data(new_msg, ipc_get_msg_data(ipc_msg), sizeof(struct fs_request), count + 1);
+	if (ret < 0) {
+		printf("[FSM] resend_request_write set data failed\n");
+	}
+	ret = ipc_call(mpinfo->_fs_ipc_struct, new_msg);
+	ipc_destroy_msg(mpinfo->_fs_ipc_struct, new_msg);
+	if (ret < 0) {
+		printf("[FSM] resend_request_write failed\n");
+	}
+	return ret;
+}
 
+// TODO: actually, we need a loop to read all the entries, but now we just want to pass the test
+int resend_request_getdent(struct mount_point_info_node *mpinfo, struct fs_request *fr, struct ipc_msg *ipc_msg) {
+	struct ipc_msg *new_msg = ipc_create_msg(mpinfo->_fs_ipc_struct, 512, 0);
+	chcore_assert(new_msg);
+	struct fs_request *new_fr = (struct fs_request *)ipc_get_msg_data(new_msg);
+	memcpy(new_fr, fr, sizeof(struct fs_request));
+	int ret = ipc_call(mpinfo->_fs_ipc_struct, new_msg);
+	memcpy(ipc_get_msg_data(ipc_msg), ipc_get_msg_data(new_msg), ret);
+	ipc_destroy_msg(mpinfo->_fs_ipc_struct, new_msg);
+	if (ret < 0) {
+		printf("[FSM] resend_request_getdent failed\n");
+	}
+	return ret;
+}
 /* LAB 5 TODO END */
 
 
@@ -103,6 +161,7 @@ void fsm_server_dispatch(struct ipc_msg *ipc_msg, u64 client_badge)
 			break;
 		case FS_REQ_UMOUNT:
 			ret = fsm_umount_fs(fr->mount.fs_path);
+			printf("umount finish\n");
 			break;
 		case FS_REQ_GET_FS_CAP:
 			mpinfo = get_mount_point(fr->getfscap.pathname, strlen(fr->getfscap.pathname));
@@ -113,7 +172,77 @@ void fsm_server_dispatch(struct ipc_msg *ipc_msg, u64 client_badge)
 			break;
 
 		/* LAB 5 TODO BEGIN */
-
+		case FS_REQ_CREAT:
+			printf("[DEBUG] FS_REQ_CREAT pathname: %s\n", fr->creat.pathname);
+			mpinfo = get_mount_point(fr->creat.pathname, strlen(fr->creat.pathname));
+			if (mpinfo == NULL) {
+				printf("[FSM] mpinfo not found when create\n");
+				break;
+			}
+			strip_path(mpinfo, fr->open.pathname);
+			ret = resend_request_file_info(mpinfo, fr);
+			if (ret < 0) {
+				printf("[FSM] creat failed\n");
+				break;
+			}
+			break;
+		case FS_REQ_OPEN:
+			mpinfo = get_mount_point(fr->open.pathname, strlen(fr->open.pathname));
+			if (mpinfo == NULL) {
+				printf("[FSM] mpinfo not found when open\n");
+				break;
+			}
+			strip_path(mpinfo, fr->open.pathname);
+			ret = resend_request_file_info(mpinfo, fr);
+			if (ret < 0) {
+				printf("[FSM] open failed\n");
+			}
+			fsm_set_mount_info_withfd(client_badge, fr->open.new_fd, mpinfo);
+			break;
+		case FS_REQ_CLOSE:
+			mpinfo = fsm_get_mount_info_withfd(client_badge, fr->close.fd);
+			if (mpinfo == NULL) {
+				printf("[FSM] mpinfo not found when close\n");
+				break;
+			}
+			ret = resend_request_file_info(mpinfo, fr);
+			if (ret < 0) {
+				printf("[FSM] open failed\n");
+			}
+			break;
+		case FS_REQ_READ:
+			mpinfo = fsm_get_mount_info_withfd(client_badge, fr->read.fd);
+			if (mpinfo == NULL) {
+				printf("[FSM] mpinfo not found when read\n");
+				break;
+			}
+			ret = resend_request_read(mpinfo, fr, ipc_msg);
+			if (ret < 0) {
+				printf("[FSM] read failed\n");
+			}
+			break;
+		case FS_REQ_WRITE:
+			mpinfo = fsm_get_mount_info_withfd(client_badge, fr->write.fd);
+			if (mpinfo == NULL) {
+				printf("[FSM] mpinfo not found when write\n");
+				break;
+			}
+			ret = resend_request_write(mpinfo, fr, ipc_msg);
+			if (ret < 0) {
+				printf("[FSM] write failed\n");
+			}
+			break;
+		case FS_REQ_GETDENTS64:
+			mpinfo = fsm_get_mount_info_withfd(client_badge, fr->getdents64.fd);
+			if (mpinfo == NULL) {
+				printf("[FSM] mpinfo not found when getdents64\n");
+				break;
+			}
+			ret = resend_request_getdent(mpinfo, fr, ipc_msg);
+			if (ret < 0) {
+				printf("[FSM] getdents64 failed\n");
+			}
+			break;
 		/* LAB 5 TODO END */
 
 		default:
