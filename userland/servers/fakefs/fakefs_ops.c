@@ -310,7 +310,6 @@ static struct ipc_struct *procm_ipc_struct = NULL;
 void fakefs_test() {
 	int procm_cap = __chcore_get_procm_cap();
 	printf("procm_cap is %d\n", procm_cap);
-	// printf("[DEBUG] file %s : line %d : func %s\n", __FILE__, __LINE__, __func__);
 	chcore_assert(procm_cap >= 0);
 	procm_ipc_struct = ipc_register_client(procm_cap);
 	{ // Create test

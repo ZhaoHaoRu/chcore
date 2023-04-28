@@ -173,7 +173,6 @@ void fsm_server_dispatch(struct ipc_msg *ipc_msg, u64 client_badge)
 
 		/* LAB 5 TODO BEGIN */
 		case FS_REQ_CREAT:
-			printf("[DEBUG] FS_REQ_CREAT pathname: %s\n", fr->creat.pathname);
 			mpinfo = get_mount_point(fr->creat.pathname, strlen(fr->creat.pathname));
 			if (mpinfo == NULL) {
 				printf("[FSM] mpinfo not found when create\n");

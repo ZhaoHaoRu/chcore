@@ -83,7 +83,6 @@ int fs_creat(const char *path)
 	if (err) {
 		return err;
 	}
-	// // printf("[DEBUG] create file name: %s\n", leaf);
 	err = tfs_creat(dirat, leaf, strlen(leaf));
 	if (err) {
 		return err;

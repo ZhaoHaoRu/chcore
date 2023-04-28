@@ -77,7 +77,6 @@ int fs_wrapper_open(u64 client_badge, struct ipc_msg *ipc_msg, struct fs_request
 	fr->open.new_fd = AT_FDROOT;
 	ret = server_ops.open(path, flags, mode, &vnode_id, &vnode_size, &vnode_type, &vnode_private);
 	if (ret != 0) {
-		printf("[DEBUG] server_ops.open failed\n");
 		fs_debug_error("ret = %d\n", ret);
 		return ret;
 	}
@@ -85,7 +84,6 @@ int fs_wrapper_open(u64 client_badge, struct ipc_msg *ipc_msg, struct fs_request
     entry_off = 0;
 	entry_id = alloc_entry();
 	if (entry_id < 0) {
-		printf("[DEBUG] alloc_entry failed\n");
 		server_ops.close(vnode_private, (vnode_type == FS_NODE_DIR));
 		return -EMFILE;
 	}
@@ -196,7 +194,6 @@ out:
 
 int fs_wrapper_write(struct ipc_msg *ipc_msg, struct fs_request *fr)
 {
-	printf("[DUBUG] get line 197\n");
 	int fd;
 	char *buf;
 	size_t size;
@@ -212,11 +209,8 @@ int fs_wrapper_write(struct ipc_msg *ipc_msg, struct fs_request *fr)
 	buf = (void *)fr + sizeof(struct fs_request);
 	size = (size_t)fr->write.count;
 	offset = (unsigned long long)server_entrys[fd]->offset;
-	printf("[DEBUG] the fd: %d, the size: %d, the buf: %s, the offset: %d\n", fd, size, buf, offset);
 	vnode = server_entrys[fd]->vnode;
-	printf("[DUBUG] get line 215\n");
 	operator = server_entrys[fd]->vnode->private;
-	printf("[DUBUG] get line 216\n");
 	/*
 	* If size == 0, do nothing and return 0
 	* Even the offset is outside of the file, inode size is not changed!
@@ -232,11 +226,9 @@ int fs_wrapper_write(struct ipc_msg *ipc_msg, struct fs_request *fr)
 	*      Filling '\0' until offset pos, then append file
 	*/
 
-	printf("[DUBUG] get line 232\n");
 	ret = server_ops.write(operator, offset, size, buf);
 
 	/* Update server_entry and vnode metadata */
-	printf("[DUBUG] Update server_entry and vnode metadata\n");
 	server_entrys[fd]->offset += ret;
 	if (server_entrys[fd]->offset > server_entrys[fd]->vnode->size) {
 		server_entrys[fd]->vnode->size = server_entrys[fd]->offset;

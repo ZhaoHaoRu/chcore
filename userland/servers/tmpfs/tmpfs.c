@@ -141,7 +141,6 @@ struct dentry *new_dent(struct inode *inode, const char *name,
 struct dentry *tfs_lookup(struct inode *dir, const char *name,
 				 size_t len)
 {
-	// printf("[DEBUG] begin tfs_lookup, name: %s, dir: %lx\n", name, dir);
 	u64 hash = hash_chars(name, len);
 	struct dentry *dent;
 	struct hlist_head *head;
@@ -149,12 +148,10 @@ struct dentry *tfs_lookup(struct inode *dir, const char *name,
 	head = htable_get_bucket(&dir->dentries, (u32) hash);
 
 	for_each_in_hlist(dent, node, head) {
-		// printf("the dent->name.len: %d, current len: %d, the dent->name.str: %s, current name: %s, cmp result: %d\n", dent->name.len, len, dent->name.str, name, strcmp(dent->name.str, name));
 		if (dent->name.len == len && 0 == strcmp(dent->name.str, name))
 			return dent;
 	}
 
-	// printf("[DEBUG] tfs_lookup: reach line 155\n");
 	return NULL;
 }
 
@@ -488,16 +485,12 @@ struct inode *tfs_open_path(const char *path)
 	if (*path == '/' && !*(path + 1))
 		return tmpfs_root;
 
-	// printf("[DEBUG] the path name: %s\n", leaf);
 	err = tfs_namex(&dirat, &leaf, 0);
 	if (err) {
-		// printf("[DEBUG] error at line 478\n");
 		return NULL;
 	}
 
-	// printf("[DEBUG] begin tfs_open_path tfs_lookup, name: %s\n", path);
 	dent = tfs_lookup(dirat, leaf, strlen(leaf));
-	// printf("[DEBUG] end tfs_open_path tfs_lookup\n");
 	return dent ? dent->inode : NULL;
 }
 

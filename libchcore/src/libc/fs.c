@@ -95,9 +95,7 @@ int fs_open_file(const char *filename, int fd, const char *mode) {
 	req->open.new_fd = fd;
 	memcpy(req->open.pathname, filename, FS_REQ_PATH_BUF_LEN);
 	req->open.flags = get_mode(mode);
-	printf("[DEBUG] the file open flags: %d\n", req->open.flags);
 	int ret = ipc_call(fs_ipc_struct, new_msg);
-	printf("[DEBUG] the file open ret: %d\n", ret);
 	ipc_destroy_msg(fs_ipc_struct, new_msg);
 	return ret;
 }
@@ -105,37 +103,14 @@ FILE *fopen(const char * filename, const char * mode) {
 
 	/* LAB 5 TODO BEGIN */
 	// create necessary data structure
-	// struct ipc_msg *new_msg = ipc_create_msg(fs_ipc_struct, sizeof(struct fs_request), 0);
-	// if (new_msg == NULL) {
-	// 	printf("[fopen] create new msg fail\n");
-	// }
-	// struct fs_request *req = (struct fs_request*)ipc_get_msg_data(new_msg);
-	// req->req = FS_REQ_OPEN;
-	// memcpy(req->open.pathname, filename, FS_REQ_PATH_BUF_LEN);
 	struct FILE *file = (struct FILE*)malloc(sizeof(int) * 2);
-	// if (*mode == 'r') {
-	// 	req->open.flags = O_RDONLY;
-	// 	req->open.mode = 0;
-	// 	file->mode = 0; 
-	// } else {
-	// 	req->open.flags = O_WRONLY;
-	// 	req->open.mode = 1;
-	// 	file->mode = 1;
-	// }
 
 	int fd = alloc_file_descripter();
-	printf("[DEBUG] the file fd: %d\n", fd);
-	// req->open.new_fd = fd;
-	
-	// int ret = ipc_call(fs_ipc_struct, new_msg);
-	// ipc_destroy_msg(fs_ipc_struct, new_msg);
+
 	int ret = fs_open_file(filename, fd, mode);
-	printf("[DEBUG] the file open ret: %d\n", ret);
 	if (ret >= 0) {	// the file exist, just return
-		printf("[DEBUG] the file exist\n");
 		file->fd = fd;
 		file->mode = get_mode(mode);
-		printf("[DEBUG] the file mode: %d\n", file->mode);
 		return file;
 	} else {	// the file not exist, create it
 		struct ipc_msg *new_msg = ipc_create_msg(fs_ipc_struct, sizeof(struct fs_request), 0);
@@ -167,22 +142,18 @@ size_t fwrite(const void * src, size_t size, size_t nmemb, FILE * f) {
 	/* LAB 5 TODO BEGIN */
 	// create necessary data structure
 	struct ipc_msg *new_msg = ipc_create_msg(fs_ipc_struct, sizeof(struct fs_request) + nmemb * size + 1, 0);
-	printf("[fwrite] the new message size: %d\n", sizeof(struct fs_request) + nmemb * size + 1);
 	if (new_msg == NULL) {
 		printf("[fwrite] create new msg fail\n");
 	}
 	struct fs_request* req = (struct fs_request*)ipc_get_msg_data(new_msg);
 	req->req = FS_REQ_WRITE;
 	req->write.fd = f->fd;
-	printf("[DEBUG] the fwrite fd: %d, %d\n", req->write.fd, f->fd);
 	req->write.count = nmemb * size;
 	int ret = ipc_set_msg_data(new_msg, (void*)src, sizeof(struct fs_request), nmemb * size + 1);
 	if (ret != 0) {
 		printf("[fwrite] set message data fail\n");
 		return ret;
 	}
-	printf("[DEBUG] the fwrite fd: %d, %d\n", req->write.fd, f->fd);
-	printf("[DEBUG] fwrite ipc call\n");
 	ret = ipc_call(fs_ipc_struct, new_msg);
 	ipc_destroy_msg(fs_ipc_struct, new_msg);
 	return ret;
@@ -211,14 +182,12 @@ size_t fread(void * destv, size_t size, size_t nmemb, FILE * f) {
 	req->read.count = size * nmemb;
 	
 	int ret = ipc_call(fs_ipc_struct, new_msg);
-	printf("[DEBUG] the fread ipc_call ret: %d\n", ret);
 	if (ret < 0) {
 		printf("[fread] read process wrong, the return value: %d\n", ret);
 	}
 	if (ret > 0) {
 		memcpy(destv, ipc_get_msg_data(new_msg), ret);
 	}
-	printf("[DEBUG] the destv in fread: %s\n", (char*)destv);
 	ipc_destroy_msg(fs_ipc_struct, new_msg);
 	/* LAB 5 TODO END */
     return ret;
@@ -305,7 +274,6 @@ int fprintf(FILE * f, const char * fmt, ...) {
 			++fmt_ptr;
 			if (*(fmt_ptr + fmt) == 'd') {
 				int current_arg = va_arg(arg, int);
-				printf("[DEBUG] current int arg: %d\n", current_arg);
 				char int_str[10] = {'\0'};
 				num2str(current_arg, int_str);
 				// char* int_str = num2str(current_arg);

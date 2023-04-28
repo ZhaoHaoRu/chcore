@@ -182,7 +182,6 @@ int do_complement(char *buf, char *complement, int complement_time)
 		if (*name == '.') {
 			continue;
 		}
-		// printf("[DEBUG] j: %d, complement_time: %d, name: %s\n", j, complement_time, name);
 		if (j == complement_time) {
 			strcpy(complement, name);
 			r = 0;
@@ -190,7 +189,6 @@ int do_complement(char *buf, char *complement, int complement_time)
 		}
 		++j;
 	}
-	// printf("[DEBUG] the complement: %s\n", complement);
 	/* LAB 5 TODO END */
 
 	return r;
@@ -401,7 +399,6 @@ int run_cmd(char *cmdline)
 	// /* Hint: Function chcore_procm_spawn() could be used here. */
 	// /* LAB 5 TODO BEGIN */
 	printf("%s\n", cmdline);
-	// printf("[DEBUG] the run cmd: %s\n", new_buf);
 	int ret = chcore_procm_spawn(cmdline, &cap);
 	return ret;
 	/* LAB 5 TODO END */
