@@ -24,11 +24,21 @@ int map_mmio(unsigned long long pa_base, unsigned long long size){
 	return 0;
 }
 
+// read a block from sd card which is at lba
 static int sdcard_readblock(int lba, char *buffer)
 {
 	/* LAB 6 TODO BEGIN */
 	/* BLANK BEGIN */
+	u64 cur_address = (unsigned long long)ARM_EMMC_BASE + lba * BLOCK_SIZE;
+	cur_address = Seek(cur_address);
+	if (cur_address == 0)
+		return -1;
 
+	int ret = sd_Read(buffer, BLOCK_SIZE);
+	if (ret != 0)
+		return -1;
+
+	return 0;
 	/* BLANK END */
 	/* LAB 6 TODO END */
 	return -1;
@@ -38,7 +48,16 @@ static int sdcard_writeblock(int lba, const char *buffer)
 {
 	/* LAB 6 TODO BEGIN */
 	/* BLANK BEGIN */
+	u64 cur_address = (unsigned long long)ARM_EMMC_BASE + lba * BLOCK_SIZE;
+	cur_address = Seek(cur_address);
+	if (cur_address == 0)
+		return -1;
 
+	int ret = sd_Write(buffer, BLOCK_SIZE);
+	if (ret != 0)
+		return -1;
+
+	return 0;
 	/* BLANK END */
 	/* LAB 6 TODO END */
 	return -1;

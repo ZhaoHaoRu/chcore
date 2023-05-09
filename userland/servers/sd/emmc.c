@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <malloc.h>
-// #include <time.h>
+// #include "time.h"
 #include "emmc.h"
 
 //
@@ -460,6 +460,7 @@ bool Initialize(void)
 	 * here we may need to provide some data struct to store the device. Originally,
 	 * the author set a class called devicemanager to manager the device msg.
 	 */
+
 	return true;
 }
 
@@ -467,7 +468,15 @@ int sd_Read(void *pBuffer, size_t nCount)
 {
 	/* LAB 6 TODO BEGIN */
     /* BLANK BEGIN */
+	if (m_ullOffset % SD_BLOCK_SIZE != 0) {
+		return -1;
+	}
+	u32 nBlock = m_ullOffset / SD_BLOCK_SIZE;
+	if (DoRead(pBuffer, nBlock, nCount) != nCount) {
+		return -1;
+	}
 
+	return nCount;
     /* BLANK END */
     /* LAB 6 TODO END */
 	return -1;
@@ -477,7 +486,14 @@ int sd_Write(const void *pBuffer, size_t nCount)
 {
 	/* LAB 6 TODO BEGIN */
     /* BLANK BEGIN */
-
+	if (m_ullOffset % SD_BLOCK_SIZE != 0) {
+		return -1;
+	}
+	u32 nBlock = m_ullOffset / SD_BLOCK_SIZE;
+	if (DoWrite(pBuffer, nBlock, nCount) != nCount) {
+		return -1;
+	}
+	return nCount;
     /* BLANK END */
     /* LAB 6 TODO END */
 	return -1;
@@ -487,7 +503,8 @@ u64 Seek(u64 ullOffset)
 {
 	/* LAB 6 TODO BEGIN */
     /* BLANK BEGIN */
-
+	m_ullOffset = ullOffset;
+	return m_ullOffset;
     /* BLANK END */
     /* LAB 6 TODO END */
 	return -1;
@@ -1504,7 +1521,19 @@ int DoDataCommand(int is_write, u8 * buf, size_t buf_size, u32 block_no)
 	// LAB6 TODO: judge the type of the command
 	/* LAB 6 TODO BEGIN */
     /* BLANK BEGIN */
-
+	if (is_write) {
+		if (m_blocks_to_transfer > 1) {
+			command = WRITE_MULTIPLE_BLOCK;
+		} else {
+			command = WRITE_BLOCK;
+		}
+	} else {
+		if (m_blocks_to_transfer > 1) {
+			command = READ_MULTIPLE_BLOCK;
+		} else {
+			command = READ_SINGLE_BLOCK;
+		}
+	}
     /* BLANK END */
     /* LAB 6 TODO END */
 
@@ -1538,7 +1567,13 @@ int DoRead(u8 * buf, size_t buf_size, u32 block_no)
 {
 	/* LAB 6 TODO BEGIN */
     /* BLANK BEGIN */
-
+	if (EnsureDataMode() != 0) {
+		return -1;
+	}
+	if (DoDataCommand(0, buf, buf_size, block_no) < 0) {
+		return -1;
+	}
+	return buf_size;
     /* BLANK END */
     /* LAB 6 TODO END */
 	return -1;
@@ -1548,7 +1583,12 @@ int DoWrite(u8 * buf, size_t buf_size, u32 block_no)
 {
 	/* LAB 6 TODO BEGIN */
     /* BLANK BEGIN */
-
+	if (EnsureDataMode() != 0) {
+		return -1;
+	}
+	if (DoDataCommand(1, buf, buf_size, block_no) < 0) {
+		return -1;
+	}
     /* BLANK END */
     /* LAB 6 TODO END */
 	return -1;
