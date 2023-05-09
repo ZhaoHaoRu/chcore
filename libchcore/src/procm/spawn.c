@@ -23,7 +23,6 @@ int chcore_procm_spawn(const char *path, int *mt_cap_out)
         struct ipc_msg *ipc_msg = ipc_create_msg(
                 procm_ipc_struct, sizeof(struct procm_ipc_data), 0);
         chcore_assert(ipc_msg);
-
         struct procm_ipc_data *procm_ipc_data =
                 (struct procm_ipc_data *)ipc_get_msg_data(ipc_msg);
         procm_ipc_data->request = PROCM_IPC_REQ_SPAWN;

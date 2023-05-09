@@ -12,7 +12,7 @@
 
 #include "shell.h"
 
-#include <stdio.h>
+#include <libc/stdio.h>
 #include <string.h>
 #include <malloc.h>
 #include <chcore/ipc.h>
@@ -71,20 +71,18 @@ static int lab5_stdio_file_read_write () {
     memset(wbuf, 0x0, sizeof(wbuf));
     memset(rbuf, 0x0, sizeof(rbuf));
     for(int i = 0; i < sizeof(wbuf); ++i) {
-        wbuf[i] = (char) i;
+        wbuf[i] = (char) (i % 26 + 'a');
     }
     FILE * pFile;
     pFile = fopen("/myfile.txt", "w");
     fwrite(wbuf, sizeof(char) , sizeof(wbuf), pFile);
     fclose(pFile);
-
     pFile = fopen("/myfile.txt", "r");
     int cnt;
     do {
         cnt = fread(rbuf, sizeof(char), sizeof(rbuf), pFile);
     } while(cnt > 0);
     fclose(pFile);
-
     return memcmp(rbuf, (char*)wbuf + sizeof(wbuf) - sizeof(rbuf), sizeof(rbuf));
 }
 

@@ -11,7 +11,7 @@
  */
 
 #include "server.h"
-
+#include <stdio.h>
 #include <chcore/types.h>
 #include <chcore/assert.h>
 #include <chcore/internal/server_caps.h>

@@ -81,11 +81,11 @@ int fs_wrapper_get_server_entry(u64 client_badge, int fd)
 
 	/* Validate fd */
 	BUG_ON(fd < 0 || fd > MAX_SERVER_ENTRY_PER_CLIENT);
-
-	for_each_in_list(n, struct server_entry_node, node, &server_entry_mapping)
+	for_each_in_list(n, struct server_entry_node, node, &server_entry_mapping) 
+		{
 		if (n->client_badge == client_badge)
 			return n->fd_to_fid[fd];
-
+		}
 	return -1;
 }
 

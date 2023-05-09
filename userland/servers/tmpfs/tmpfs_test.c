@@ -55,10 +55,12 @@ int test_mkdir() {
     int err;
     err = tmpfs_mkdir("/test_dir", 0);
     if(err) {
+        printf("test mkdir, fail at line 58\n");
         return err;
     }
     err = tmpfs_mkdir("/test_dir/test_dir2", 0);
     if(err) {
+        printf("test mkdir, fail at line 63\n");
         return err;
     }
     err = tmpfs_mkdir("/test_dir/test_dir3", 0);
@@ -100,9 +102,9 @@ int test_read_write() {
 
 int test_create() {
     int err = fs_creat("/test_dir/tmp.txt");
-    printf("test_create err is %d\n", err);
     struct inode * inode = tfs_open_path("/test_dir/tmp.txt");
     if(!inode) {
+        printf("test create fail at line 108\n");
         return -1;
     }
     return err;

@@ -136,38 +136,6 @@ struct dentry *new_dent(struct inode *inode, const char *name,
 	return dent;
 }
 
-// this function create a file (directory if `mkdir` == true, otherwise regular
-// file) and its size is `len`. You should create an inode and corresponding 
-// dentry, then add dentey to `dir`'s htable by `htable_add`.
-// Assume that no separator ('/') in `name`.
-static int tfs_mknod(struct inode *dir, const char *name, size_t len, int mkdir)
-{
-	struct inode *inode;
-	struct dentry *dent;
-
-	BUG_ON(!name);
-
-	if (len == 0) {
-		WARN("mknod with len of 0");
-		return -ENOENT;
-	}
-	/* LAB 5 TODO BEGIN */
-
-	/* LAB 5 TODO END */
-
-	return 0;
-}
-
-int tfs_mkdir(struct inode *dir, const char *name, size_t len)
-{
-	return tfs_mknod(dir, name, len, 1 /* mkdir */ );
-}
-
-int tfs_creat(struct inode *dir, const char *name, size_t len)
-{
-	return tfs_mknod(dir, name, len, 0 /* mkdir */ );
-}
-
 // look up a file called `name` under the inode `dir` 
 // and return the dentry of this file
 struct dentry *tfs_lookup(struct inode *dir, const char *name,
@@ -183,8 +151,58 @@ struct dentry *tfs_lookup(struct inode *dir, const char *name,
 		if (dent->name.len == len && 0 == strcmp(dent->name.str, name))
 			return dent;
 	}
+
 	return NULL;
 }
+
+// this function create a file (directory if `mkdir` == true, otherwise regular
+// file) and its size is `len`. You should create an inode and corresponding 
+// dentry, then add dentey to `dir`'s htable by `htable_add`.
+// Assume that no separator ('/') in `name`.
+static int tfs_mknod(struct inode *dir, const char *name, size_t len, int mkdir)
+{
+	struct inode *inode;
+	struct dentry *dent;
+
+	BUG_ON(!name);
+
+	if (len == 0) {
+		WARN("mknod with len of 0");
+		return -ENOENT;
+	}
+
+	/* LAB 5 TODO BEGIN */
+	if (tfs_lookup(dir, name ,len)) {
+        return -EEXIST;
+	}
+	if (mkdir) {
+		inode = new_dir();	
+	} else {
+		inode = new_reg();
+	}
+	if (IS_ERR(inode)) {
+		WARN("tfs_mknod: create inode fail");
+		return -EPERM;
+	}
+	dent = new_dent(inode, name, len);
+	init_hlist_node(&dent->node);
+	htable_add(&dir->dentries, dent->name.hash, &dent->node);
+	/* LAB 5 TODO END */
+
+	return 0;
+}
+
+int tfs_mkdir(struct inode *dir, const char *name, size_t len)
+{
+	return tfs_mknod(dir, name, len, 1 /* mkdir */ );
+}
+
+int tfs_creat(struct inode *dir, const char *name, size_t len)
+{
+	return tfs_mknod(dir, name, len, 0 /* mkdir */ );
+}
+
+
 
 // Walk the file system structure to locate a file with the pathname stored in `*name`
 // and saves parent dir to `*dirat` and the filename to `*name`.
@@ -222,7 +240,37 @@ int tfs_namex(struct inode **dirat, const char **name, int mkdir_p)
 	// `tfs_lookup` and `tfs_mkdir` are useful here
 
 	/* LAB 5 TODO BEGIN */
-
+	int ptr = 0;
+	i = 0;
+	memset(buff, '\0', MAX_FILENAME_LEN + 1);
+	int length = strlen(*name);
+	while (i <= length) {
+		if (*(*name + i) == '/') {		// find a directory
+			buff[ptr] = '\0';
+			dent = tfs_lookup(*dirat, buff, ptr);
+			if (dent == NULL) {
+				if (mkdir_p) {
+					err = tfs_mkdir(*dirat, buff, ptr);
+					if (err != 0) {
+						return err;
+					}
+				} else {
+					return -ENOENT;
+				}
+				dent = tfs_lookup(*dirat, buff, ptr);
+			} 
+			*dirat = dent->inode;
+			ptr = 0;
+			memset(buff, '\0', MAX_FILENAME_LEN + 1);
+		
+		} else if (i == length) {		// it is a file entry, reset the name as this entry
+			*name = *name + length - ptr;
+		} else {
+			buff[ptr] = *(*name + i);
+			++ptr;
+		}
+		++i;
+ 	}
 	/* LAB 5 TODO END */
 
 	/* we will never reach here? */
@@ -294,13 +342,35 @@ ssize_t tfs_file_write(struct inode * inode, off_t offset, const char *data,
 	BUG_ON(inode->type != FS_REG);
 	BUG_ON(offset > inode->size);
 
-	u64 page_no, page_off;
+	u64 page_no, page_off, page_size;
 	u64 cur_off = offset;
 	size_t to_write;
 	void *page;
+	int err;
 
 	/* LAB 5 TODO BEGIN */
-
+	while (cur_off < inode->size) {
+		page_no = cur_off / PAGE_SIZE;
+		page_off = cur_off % PAGE_SIZE;
+		page = radix_get(&inode->data, page_no);
+		page_size = PAGE_SIZE - page_off < size - (cur_off - offset) ? PAGE_SIZE - page_off : size - (cur_off - offset);
+		if (size - (cur_off - offset) < page_size) {
+			page_size = size - (cur_off - offset);
+		}
+		memcpy(page + page_off, data + cur_off - offset, page_size);
+		cur_off += page_size;
+	}
+	while (cur_off < offset + size) {
+		page_no = cur_off / PAGE_SIZE;
+		page_off = cur_off % PAGE_SIZE;
+		page = malloc(PAGE_SIZE);
+		err = radix_add(&inode->data, page_no, page);
+		BUG_ON(err != 0);
+		page_size = PAGE_SIZE - page_off < size - (cur_off - offset) ? PAGE_SIZE - page_off : size - (cur_off - offset);
+		memcpy(page + page_off, data + cur_off - offset, page_size);
+		cur_off += page_size;
+	}
+	inode->size = inode->size > cur_off + size ? inode->size : offset + size;
 	/* LAB 5 TODO END */
 
 	return cur_off - offset;
@@ -315,14 +385,22 @@ ssize_t tfs_file_read(struct inode * inode, off_t offset, char *buff,
 {
 	BUG_ON(inode->type != FS_REG);
 	BUG_ON(offset > inode->size);
-
-	u64 page_no, page_off;
+	
+	u64 page_no, page_off, page_size;
 	u64 cur_off = offset;
 	size_t to_read;
 	void *page;
 
 	/* LAB 5 TODO BEGIN */
-
+	memset(buff, '\0', size);
+	while (cur_off < inode->size && cur_off - offset < size) {
+		page_no = cur_off / PAGE_SIZE;
+		page_off = cur_off % PAGE_SIZE;
+		page = radix_get(&inode->data, page_no);
+		page_size = PAGE_SIZE - page_off < size - (cur_off - offset) ? PAGE_SIZE - page_off : size - (cur_off - offset);
+		memcpy(buff + cur_off - offset, page + page_off, page_size);
+		cur_off += page_size;
+	}
 	/* LAB 5 TODO END */
 
 	return cur_off - offset;
@@ -348,7 +426,28 @@ int tfs_load_image(const char *start)
 
 	for (f = g_files.head.next; f; f = f->next) {
 	/* LAB 5 TODO BEGIN */
-
+		dirat = tmpfs_root;
+		leaf = f->name;
+		len = f->header.c_filesize;
+		err = tfs_namex(&dirat, &leaf, 1);	// if not exist, create it
+		if (err != 0) {
+			return -EINVAL;
+		} 
+		dent = tfs_lookup(dirat, leaf, strlen(leaf));
+		if (!dent) {	// not exist, need to create a new file or directory
+			if (len == 0) {
+				err = tfs_mkdir(dirat, leaf, strlen(leaf));
+				BUG_ON(err != 0);
+			} else {
+				err = tfs_creat(dirat, leaf, strlen(leaf));
+				BUG_ON(err != 0);
+			}
+			dent = tfs_lookup(dirat, leaf, strlen(leaf));
+			BUG_ON(!dent);
+		}
+		if (len > 0) {
+			write_count = tfs_file_write(dent->inode, 0, f->data, len);
+		}
 	/* LAB 5 TODO END */
 	}
 
@@ -387,8 +486,9 @@ struct inode *tfs_open_path(const char *path)
 		return tmpfs_root;
 
 	err = tfs_namex(&dirat, &leaf, 0);
-	if (err)
+	if (err) {
 		return NULL;
+	}
 
 	dent = tfs_lookup(dirat, leaf, strlen(leaf));
 	return dent ? dent->inode : NULL;

@@ -81,7 +81,7 @@ int fs_wrapper_open(u64 client_badge, struct ipc_msg *ipc_msg, struct fs_request
 		return ret;
 	}
 
-    // entry_off = 0;
+    entry_off = 0;
 	entry_id = alloc_entry();
 	if (entry_id < 0) {
 		server_ops.close(vnode_private, (vnode_type == FS_NODE_DIR));
@@ -207,12 +207,10 @@ int fs_wrapper_write(struct ipc_msg *ipc_msg, struct fs_request *fr)
 	ret = 0;
 	fd = fr->write.fd;
 	buf = (void *)fr + sizeof(struct fs_request);
-
 	size = (size_t)fr->write.count;
 	offset = (unsigned long long)server_entrys[fd]->offset;
 	vnode = server_entrys[fd]->vnode;
 	operator = server_entrys[fd]->vnode->private;
-
 	/*
 	* If size == 0, do nothing and return 0
 	* Even the offset is outside of the file, inode size is not changed!
