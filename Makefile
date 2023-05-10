@@ -1,4 +1,4 @@
-LAB := 6
+LAB := 5
 
 V := @
 PROJECT_DIR := .

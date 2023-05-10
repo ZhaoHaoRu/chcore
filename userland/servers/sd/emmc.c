@@ -1611,7 +1611,8 @@ int TimeoutWait(unsigned long reg, unsigned mask, int value, unsigned usec)
 
 void usDelay(unsigned usec)
 {
-	timer_usDelay(usec);
+	// timer_usDelay(usec);
+	SimpleusDelay(usec);
 }
 
 const u32 *GetID(void)
