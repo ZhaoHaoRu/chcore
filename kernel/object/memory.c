@@ -343,6 +343,7 @@ int sys_map_pmo(u64 target_cap_group_cap, u64 pmo_cap, u64 addr, u64 perm,
                 goto out_obj_put_pmo;
         }
         vmspace = obj_get(target_cap_group, VMSPACE_OBJ_ID, TYPE_VMSPACE);
+        // kinfo("[lab6 DEBUG]vmspace is %p\n", vmspace);
         BUG_ON(vmspace == NULL);
 
         r = vmspace_map_range(vmspace, addr, len, perm, pmo);

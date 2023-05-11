@@ -17,6 +17,7 @@ int map_mmio(unsigned long long pa_base, unsigned long long size){
 		return -1;
 	}
 
+	printf("the address is %llx\n", mmio_pmo);
 	ret = __chcore_sys_map_pmo(SELF_CAP, mmio_pmo, pa_base, VM_READ | VM_WRITE, size);
 	if (ret < 0) {
 		return -1;
@@ -29,14 +30,15 @@ static int sdcard_readblock(int lba, char *buffer)
 {
 	/* LAB 6 TODO BEGIN */
 	/* BLANK BEGIN */
-	u64 cur_address = (unsigned long long)ARM_EMMC_BASE + lba * BLOCK_SIZE;
-	cur_address = Seek(cur_address);
-	if (cur_address == 0)
-		return -1;
-
+	// printf("the virtual address is %llx\n", vir_address);
+	u64 cur_address = Seek(lba * BLOCK_SIZE);
+	
 	int ret = sd_Read(buffer, BLOCK_SIZE);
-	if (ret != 0)
+	// printf("sdcard_readblock: %s\n", buffer);
+	// printf("[DEBUG] the read ret: %d\n", ret);
+	if (ret < 0) {
 		return -1;
+	}
 
 	return 0;
 	/* BLANK END */
@@ -48,16 +50,18 @@ static int sdcard_writeblock(int lba, const char *buffer)
 {
 	/* LAB 6 TODO BEGIN */
 	/* BLANK BEGIN */
-	u64 cur_address = (unsigned long long)ARM_EMMC_BASE + lba * BLOCK_SIZE;
-	cur_address = Seek(cur_address);
-	if (cur_address == 0)
+	u64 cur_address = Seek(lba * BLOCK_SIZE);
+	if (cur_address == -1) {
+		printf("seek failed\n");
 		return -1;
-
+	}
+		
 	int ret = sd_Write(buffer, BLOCK_SIZE);
-	if (ret != 0)
-		return -1;
+	if (ret == -1) {
+		printf("write failed\n");
+	}
 
-	return 0;
+	return ret;
 	/* BLANK END */
 	/* LAB 6 TODO END */
 	return -1;
@@ -86,6 +90,7 @@ void sd_dispatch(ipc_msg_t * ipc_msg, u64 client_badge)
 int main(void)
 {
 	int ret;
+	printf("[DEBUG] sd_server\n");
 
 	map_mmio((unsigned long long)ARM_EMMC_BASE, 0x100);
 	while (!Initialize()) ;

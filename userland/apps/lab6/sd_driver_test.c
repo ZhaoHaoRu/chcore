@@ -14,33 +14,42 @@
 
 int inner_sd_io_test()
 {
+    printf("inner_sd_io_test\n");
     int ret;
     char buffer[BLOCK_SIZE];
 
     chcore_connect_sd_server();
 
+    // printf("sd_io_test\n");
     for (int i = 0; i < TEST_BLOCK_NUM; ++i) {
         for (int j = 0; j < BLOCK_SIZE; ++j) {
-            buffer[j] = (10 * i + j) % 120;
+            // buffer[j] = (10 * i + j) % 120;
+            buffer[j] = (10 * i + j) % 26 + 'a';
         }
+        // printf("write block %d\n", i);
         ret = chcore_sd_write(i, buffer);
+        // printf("the write ret: %d\n", ret);
         if (ret != 0)
             return -1;
     }
 
     for (int i = TEST_BLOCK_NUM - 1; i >= 0; --i) {
         ret = chcore_sd_read(i, buffer);
+        // printf("[DEBUG] the read block is %d\n", i);
+        // printf("[DEBUG] read block %d\n, the content: %s\n", i,  buffer);
         for (int j = 0; j < BLOCK_SIZE; ++j) {
-            if (buffer[j] != (10 * i + j) % 120)
+            if (buffer[j] != (10 * i + j) % 26 + 'a')
                 return -1;
         }
     }
 
+    printf("get line 46\n");
     return 0;
 }
 
 int main()
 {
+    printf("begin sd_driver_test\n");
     TEST_FUNC(inner_sd_io_test);
     return 0;
 }

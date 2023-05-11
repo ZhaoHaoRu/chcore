@@ -55,14 +55,18 @@ struct ipc_struct *ipc_register_client(int server_thread_cap)
         /* LAB 4 TODO BEGIN: fill vm_config according to client_id */
         vm_config.buf_base_addr = CLIENT_BUF_BASE + client_id * CLIENT_BUF_SIZE;
         vm_config.buf_size = CLIENT_BUF_SIZE;
+        printf("[DEBUG] ipc_register_client: client_id = %d, buf_base_addr = %lx, buf_size = %lx\n", client_id, vm_config.buf_base_addr, vm_config.buf_size);
+        
         /* LAB 4 TODO END */
         while (retry_times) {
                 conn_cap = __chcore_sys_register_client((u32)server_thread_cap,
                                                         (u64)&vm_config);
+                printf("[DEBUG] ipc_register_client: conn_cap = %d\n", conn_cap);
                 if (conn_cap > 0) {
                         break;
                 } else if (conn_cap == -EIPCRETRY) {
                         // Happens when server is not ready yet
+                        printf("[DEBUG] retry\n");
                         retry_times--;
                         __chcore_sys_yield();
                         continue;
@@ -70,6 +74,53 @@ struct ipc_struct *ipc_register_client(int server_thread_cap)
                         return 0;
                 }
         }
+        printf("[DEBUG] finish retry\n");
+        ipc_struct->shared_buf = vm_config.buf_base_addr;
+        ipc_struct->shared_buf_len = vm_config.buf_size;
+        ipc_struct->conn_cap = conn_cap;
+        spinlock_init(&ipc_struct->ipc_lock);
+        printf("[DEBUG] ipc_register_client: ipc_struct->shared_buf = %lx, ipc_struct->shared_buf_len = %lx, ipc_struct->conn_cap = %d\n", ipc_struct->shared_buf, ipc_struct->shared_buf_len, ipc_struct->conn_cap);
+        return ipc_struct;
+}
+
+struct ipc_struct *ipc_register_client2(int server_thread_cap)
+{
+        int conn_cap, retry_times = RETRY_UPPER_BOUND;
+        struct ipc_struct *ipc_struct = malloc(sizeof(struct ipc_struct));
+        // Assign a unique id for each client
+        int client_id = __sync_fetch_and_add(&client_ipc_num, 1);
+        struct ipc_vm_config vm_config;
+
+        if (client_id >= MAX_CLIENT)
+                return NULL;
+
+        /* LAB 4 TODO BEGIN: fill vm_config according to client_id */
+        vm_config.buf_base_addr = CLIENT_BUF_BASE + client_id * CLIENT_BUF_SIZE;
+        vm_config.buf_size = CLIENT_BUF_SIZE;
+        printf("[DEBUG] ipc_register_client: client_id = %d, buf_base_addr = %lx, buf_size = %lx\n", client_id, vm_config.buf_base_addr, vm_config.buf_size);
+        
+        /* LAB 4 TODO END */
+        while (retry_times) {
+                conn_cap = __chcore_sys_register_client((u32)server_thread_cap,
+                                                        (u64)&vm_config);
+                printf("[DEBUG] ipc_register_client: conn_cap = %d\n", conn_cap);
+                if (conn_cap > 0) {
+                        break;
+                } else if (conn_cap == -EIPCRETRY) {
+                        // Happens when server is not ready yet
+                        printf("[DEBUG] retry\n");
+                        retry_times--;
+                        long i = 10000000000;
+                        while (i > 0) {
+                                i--;
+                        }
+                        // __chcore_sys_yield();
+                        continue;
+                } else if (conn_cap < 0) {
+                        return 0;
+                }
+        }
+        printf("[DEBUG] finish retry\n");
         ipc_struct->shared_buf = vm_config.buf_base_addr;
         ipc_struct->shared_buf_len = vm_config.buf_size;
         ipc_struct->conn_cap = conn_cap;
@@ -77,6 +128,7 @@ struct ipc_struct *ipc_register_client(int server_thread_cap)
 
         return ipc_struct;
 }
+
 
 /* IPC msg related stuff */
 /*

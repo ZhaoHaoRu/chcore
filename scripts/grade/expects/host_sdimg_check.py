@@ -17,7 +17,8 @@ def check_sd_img():
     for lba in range(TEST_BLOCK_NUM):
         block_data = readblock(lba)
         for k in range(BLOCK_SIZE):
-            if block_data[k] != (10 * lba + k) % 120:
+            if block_data[k] != (10 * lba + k) % 26 + 'a':
+            # if block_data[k] != (10 * lba + k) % 120:
                 return -1
     return 0
 

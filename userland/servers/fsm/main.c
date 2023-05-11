@@ -271,5 +271,6 @@ int main(int argc, char *argv[])
 	while (1) {
 		__chcore_sys_yield();
 	}
+
 	return 0;
 }

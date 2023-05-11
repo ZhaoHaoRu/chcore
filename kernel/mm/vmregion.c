@@ -55,7 +55,7 @@ static int check_vmr_intersect(struct vmspace *vmspace,
                 start = vmr->start;
                 end = start + vmr->size;
                 if (!((new_start >= end) || (new_end <= start))) {
-                        kwarn("new_start: %p, new_ned: %p, start: %p, end: %p\n",
+                        kwarn("new_start: %p, new_end: %p, start: %p, end: %p\n",
                               new_start,
                               new_end,
                               start,

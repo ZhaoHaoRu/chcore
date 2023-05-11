@@ -472,7 +472,8 @@ int sd_Read(void *pBuffer, size_t nCount)
 		return -1;
 	}
 	u32 nBlock = m_ullOffset / SD_BLOCK_SIZE;
-	if (DoRead(pBuffer, nBlock, nCount) != nCount) {
+	if (DoRead(pBuffer, nCount, nBlock) != nCount) {
+		printf("[DEBUG] sd_Read: DoRead failed\n");
 		return -1;
 	}
 
@@ -487,13 +488,18 @@ int sd_Write(const void *pBuffer, size_t nCount)
 	/* LAB 6 TODO BEGIN */
     /* BLANK BEGIN */
 	if (m_ullOffset % SD_BLOCK_SIZE != 0) {
+		printf("[DEBUG] sd_Write: m_ullOffset %% SD_BLOCK_SIZE != 0\n");
 		return -1;
 	}
+
 	u32 nBlock = m_ullOffset / SD_BLOCK_SIZE;
-	if (DoWrite(pBuffer, nBlock, nCount) != nCount) {
+	printf("[DEBUG] sd_Write: nBlock = %d, nCount = %d\n", nBlock, nCount);
+	int ret = DoWrite(pBuffer, nCount, nBlock);
+	if (ret < 0) {
+		printf("[DEBUG] sd_Write: DoWrite failed, the ret: %d\n", ret);
 		return -1;
 	}
-	return nCount;
+	return ret;
     /* BLANK END */
     /* LAB 6 TODO END */
 	return -1;
@@ -1502,14 +1508,14 @@ int DoDataCommand(int is_write, u8 * buf, size_t buf_size, u32 block_no)
 
 	// This is as per HCSS 3.7.2.1
 	if (buf_size < m_block_size) {
-		//printf ("DoDataCommand() called with buffer size (%d) less than block size (%d)\n", buf_size, m_block_size);
+		printf ("DoDataCommand() called with buffer size (%d) less than block size (%d)\n", buf_size, m_block_size);
 
 		return -1;
 	}
 
 	m_blocks_to_transfer = buf_size / m_block_size;
 	if (buf_size % m_block_size) {
-		//printf ("DoDataCommand() called with buffer size (%d) not an exact multiple of block size (%d)\n", buf_size, m_block_size);
+		printf ("DoDataCommand() called with buffer size (%d) not an exact multiple of block size (%d)\n", buf_size, m_block_size);
 
 		return -1;
 	}
@@ -1543,13 +1549,13 @@ int DoDataCommand(int is_write, u8 * buf, size_t buf_size, u32 block_no)
 		if (IssueCommand(command, block_no, 5000000)) {
 			break;
 		} else {
-			//printf ("error sending CMD%d\n", command);
-			//printf ("error = %x\n", m_last_error);
+			printf ("error sending CMD%d\n", command);
+			printf ("error = %x\n", m_last_error);
 
 			if (++retry_count < max_retries) {
-				//printf ("Retrying\n");
+				printf ("Retrying\n");
 			} else {
-				//printf ("Giving up\n");
+				printf ("Giving up\n");
 			}
 		}
 	}
@@ -1568,11 +1574,14 @@ int DoRead(u8 * buf, size_t buf_size, u32 block_no)
 	/* LAB 6 TODO BEGIN */
     /* BLANK BEGIN */
 	if (EnsureDataMode() != 0) {
+		printf("[DEBUG] EnsureDataMode() != 0\n");
 		return -1;
 	}
 	if (DoDataCommand(0, buf, buf_size, block_no) < 0) {
+		printf("[DEBUG] DoDataCommand(0, buf, buf_size, block_no) < 0\n");
 		return -1;
 	}
+	// printf("[DEBUG] the buf is %s\n", buf);
 	return buf_size;
     /* BLANK END */
     /* LAB 6 TODO END */
@@ -1584,11 +1593,16 @@ int DoWrite(u8 * buf, size_t buf_size, u32 block_no)
 	/* LAB 6 TODO BEGIN */
     /* BLANK BEGIN */
 	if (EnsureDataMode() != 0) {
+		printf("[DEBUG] EnsureDataMode() != 0\n");
 		return -1;
 	}
-	if (DoDataCommand(1, buf, buf_size, block_no) < 0) {
+	printf("[DEBUG] buf: %x, buf_size: %d, block_no: %d\n", buf, buf_size, block_no);
+	int ret = DoDataCommand(1, buf, buf_size, block_no);
+	if (ret < 0) {
+		printf("[DEBUG] DoDataCommand(1, buf, buf_size, block_no) < 0\n");
 		return -1;
 	}
+	return ret;
     /* BLANK END */
     /* LAB 6 TODO END */
 	return -1;

@@ -56,6 +56,7 @@ typedef void (*server_handler)();
 
 /* Registeration interfaces */
 struct ipc_struct *ipc_register_client(int server_thread_cap);
+struct ipc_struct *ipc_register_client2(int server_thread_cap);
 int ipc_register_server(server_handler server_handler);
 
 /* IPC message operating interfaces */

@@ -49,12 +49,18 @@ static int test_naive_fs_creat()
 
     strcpy(pn_buf, "testfile0");
     for (int i = 0; i < 10; ++i) {
-        if (naive_fs_access(pn_buf) != -1)
+        if (naive_fs_access(pn_buf) != -1) {
+            printf("[DEBUG] naive_fs_access failed, the file: %s\n", pn_buf);
             return -1;
-        if (naive_fs_creat(pn_buf) != 0)
+        }
+        if (naive_fs_creat(pn_buf) != 0) {
+            printf("[DEBUG] naive_fs_creat failed, the file: %s\n", pn_buf);
             return -1;
-        if (naive_fs_access(pn_buf) != 0)
+        } 
+        if (naive_fs_access(pn_buf) != 0) {
+            printf("[DEBUG] naive_fs_access failed, the file: %s\n", pn_buf);
             return -1;
+        }
         pn_buf[8]++;
     }
 

@@ -1,9 +1,10 @@
-LAB := 5
+LAB := 6
 
 V := @
 PROJECT_DIR := .
 BUILD_DIR := $(PROJECT_DIR)/build
 KERNEL_IMG := $(BUILD_DIR)/kernel.img
+SD_CARD_PATH := $(BUILD_DIR)/sd.img
 QEMU := qemu-system-aarch64
 _QEMU := $(PROJECT_DIR)/scripts/qemu/qemu_wrapper.sh $(QEMU)
 QEMU_GDB_PORT := 1234

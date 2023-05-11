@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
 			printf("Cannot run %s, ERROR %d\n", buf, ret);
 		}
 	}
-
+	printf("The shell server is going to exit!\n");
 	return 0;
 }
 

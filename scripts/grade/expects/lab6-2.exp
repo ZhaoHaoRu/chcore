@@ -8,6 +8,7 @@ proc print {msg} {
 set timeout 10
 log_user 0
 
+echo "begin lab6-2"
 spawn bash -c "./scripts/grade/expects/host_sdimg_check.py"
 set qemu_pid [exp_pid -i $spawn_id]
 
