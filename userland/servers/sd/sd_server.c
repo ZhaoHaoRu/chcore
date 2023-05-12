@@ -17,7 +17,6 @@ int map_mmio(unsigned long long pa_base, unsigned long long size){
 		return -1;
 	}
 
-	printf("the address is %llx\n", mmio_pmo);
 	ret = __chcore_sys_map_pmo(SELF_CAP, mmio_pmo, pa_base, VM_READ | VM_WRITE, size);
 	if (ret < 0) {
 		return -1;
@@ -30,12 +29,9 @@ static int sdcard_readblock(int lba, char *buffer)
 {
 	/* LAB 6 TODO BEGIN */
 	/* BLANK BEGIN */
-	// printf("the virtual address is %llx\n", vir_address);
 	u64 cur_address = Seek(lba * BLOCK_SIZE);
 	
 	int ret = sd_Read(buffer, BLOCK_SIZE);
-	// printf("sdcard_readblock: %s\n", buffer);
-	// printf("[DEBUG] the read ret: %d\n", ret);
 	if (ret < 0) {
 		return -1;
 	}

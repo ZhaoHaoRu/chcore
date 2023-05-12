@@ -14,7 +14,6 @@
 
 int inner_sd_io_test()
 {
-    printf("inner_sd_io_test\n");
     int ret;
     char buffer[BLOCK_SIZE];
 
@@ -42,7 +41,6 @@ int inner_sd_io_test()
 
 int main()
 {
-    printf("begin sd_driver_test\n");
     TEST_FUNC(inner_sd_io_test);
     return 0;
 }

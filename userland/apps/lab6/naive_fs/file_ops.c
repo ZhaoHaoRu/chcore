@@ -11,7 +11,6 @@ static int start = 1;
 
 void initialize() {
     if (start) {
-        printf("initialize begin\n");
         start = 0;
         char bitmap[BLOCK_SIZE] = {'\0'};
         for (int i = 0; i < TEST_BLOCK_NUM; ++i) {
@@ -43,9 +42,7 @@ void num2str(int val, char *result) {
 int find_file_by_name (const char *name) {
     char buffer[BLOCK_SIZE] = {'\0'};
     int ret = sd_bread(0, buffer);
-    printf("the root dir is %s\n", buffer);
     if (ret == -1) {
-        printf("read failed\n");
         return -1;
     }
     int i = 0, j = 0;
@@ -64,7 +61,6 @@ int find_file_by_name (const char *name) {
                     block_id = block_id * 10 + buffer[i] - '0';
                     ++i;
                 }
-                printf("[DEBUG] find the file: %s, the wanted: %s, the block id: %d\n", name_buf, name, block_id);
                 return block_id;
             }
             i += 1;
@@ -92,7 +88,6 @@ int naive_fs_access(const char *name)
     // the second block is the bitmap
     // the format is: [name]/[block id]/[name]/[block id]/[name]/[block id]/
     initialize();
-    printf("[DEBUG] navie_fs_access: name: %s\n", name);
     int ret = find_file_by_name(name);
     if (ret >= 0) {
         return 0;
@@ -108,7 +103,6 @@ int naive_fs_creat(const char *name)
     /* LAB 6 TODO BEGIN */
     /* BLANK BEGIN */
     initialize();
-    printf("[DEBUG] naive_fs_creat: name: %s\n", name);
     int ret = find_file_by_name(name);
     if (ret >= 0) {
         return -1;
@@ -117,7 +111,6 @@ int naive_fs_creat(const char *name)
     char bitmap[BLOCK_SIZE] = {'\0'};
     ret = sd_bread(1, bitmap);
     if (ret == -1) {
-        printf("read failed\n");
         return -1;
     }
     int block_id = 2;
@@ -128,9 +121,7 @@ int naive_fs_creat(const char *name)
         }
         ++block_id;
     }
-    printf("the choose block id is %d\n", block_id);
     if (block_id == BLOCK_SIZE) {
-        printf("no enough space\n");
         return -1;
     }
 
@@ -138,7 +129,6 @@ int naive_fs_creat(const char *name)
     // write the bitmap
     ret = sd_bwrite(1, bitmap);
     if (ret == -1) {
-        printf("write failed\n");
         return -1;
     }
 
@@ -146,11 +136,9 @@ int naive_fs_creat(const char *name)
     char dir[BLOCK_SIZE] = {'\0'};
     ret = sd_bread(0, dir);
     if (ret == -1) {
-        printf("read failed\n");
         return -1;
     }
     i = 0;
-    printf("the dir before create is %s\n", dir);
     while (i < BLOCK_SIZE && dir[i] != '\0') {
         ++i;
     }
@@ -162,14 +150,12 @@ int naive_fs_creat(const char *name)
         ++j;
     }
     if (i == BLOCK_SIZE) {
-        printf("no enough space\n");
         return -1;
     }
 
     dir[i] = '/';
     i += 1;
     if (i == BLOCK_SIZE) {
-        printf("no enough space\n");
         return -1;
     }
     // write the block num
@@ -185,7 +171,6 @@ int naive_fs_creat(const char *name)
         ++j;
     }
     if (i == BLOCK_SIZE) {
-        printf("no enough space\n");
         return -1;
     }
 
@@ -193,14 +178,11 @@ int naive_fs_creat(const char *name)
     i += 1;
 
     if (i == BLOCK_SIZE) {
-        printf("no enough space\n");
         return -1;
     }
 
-    printf("[DEBUG] after create, the dir is %s\n", dir);
     ret = sd_bwrite(0, dir);
     if (ret == -1) {
-        printf("write failed\n");
         return -1;
     }
 
@@ -215,21 +197,16 @@ int naive_fs_pread(const char *name, int offset, int size, char *buffer)
     /* LAB 6 TODO BEGIN */
     /* BLANK BEGIN */
     initialize();
-    printf("[DEBUG] naive_fs_pread: name: %s\n", name);
     int block_id = find_file_by_name(name);
     if (block_id == -1) {
-        printf("[DEBUG] find file by name error\n");
         return -1;
     }
     char buf[BLOCK_SIZE] = {'\0'};
-    printf("[DEBUG] the read directory: %d\n", block_id);
     int ret = sd_bread(block_id, buf);
     if (ret == -1) {
-        printf("[DEBUG] read failed\n");
         return -1;
     }
     int read_size = BLOCK_SIZE - offset <  size ? BLOCK_SIZE - offset : size;
-    printf("[DEBUG] read size: %d\n", read_size);
     memcpy(buffer, buf + offset, read_size);
     return read_size;
     /* BLANK END */
@@ -268,7 +245,6 @@ int naive_fs_unlink(const char *name)
     /* LAB 6 TODO BEGIN */
     /* BLANK BEGIN */
     initialize();
-    printf("[DEBUG] naive_fs_unlink: name: %s\n", name);
     int ret = find_file_by_name(name);
     if (ret == -1) {
         return -1;
@@ -278,13 +254,11 @@ int naive_fs_unlink(const char *name)
     char bitmap[BLOCK_SIZE] = {'\0'};
     ret = sd_bread(1, bitmap);
     if (ret == -1) {
-        printf("read failed\n");
         return -1;
     }
     bitmap[ret] = '0';
     ret = sd_bwrite(1, bitmap);
     if (ret == -1) {
-        printf("write failed\n");
         return -1;
     }
 
@@ -292,7 +266,6 @@ int naive_fs_unlink(const char *name)
     char dir[BLOCK_SIZE] = {'\0'};
     ret = sd_bread(0, dir);
     if (ret == -1) {
-        printf("read failed\n");
         return -1;
     }
 
@@ -322,7 +295,6 @@ int naive_fs_unlink(const char *name)
 
     ret = sd_bwrite(0, dir);
     if (ret == -1) {
-        printf("write failed\n");
         return -1;
     }
 

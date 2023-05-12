@@ -49,18 +49,12 @@ static int test_naive_fs_creat()
 
     strcpy(pn_buf, "testfile0");
     for (int i = 0; i < 10; ++i) {
-        if (naive_fs_access(pn_buf) != -1) {
-            printf("[DEBUG] naive_fs_access failed, the file: %s\n", pn_buf);
+        if (naive_fs_access(pn_buf) != -1)
             return -1;
-        }
-        if (naive_fs_creat(pn_buf) != 0) {
-            printf("[DEBUG] naive_fs_creat failed, the file: %s\n", pn_buf);
+        if (naive_fs_creat(pn_buf) != 0)
             return -1;
-        } 
-        if (naive_fs_access(pn_buf) != 0) {
-            printf("[DEBUG] naive_fs_access failed, the file: %s\n", pn_buf);
+        if (naive_fs_access(pn_buf) != 0)
             return -1;
-        }
         pn_buf[8]++;
     }
 
@@ -69,7 +63,6 @@ static int test_naive_fs_creat()
 
 static int test_naive_fs_read_write()
 {
-    printf("[DEBUG] begin test_naive_fs_read_write\n");
     char pn_buf[24];
     char buffer[BLOCK_SIZE * 2];
     char read_buffer[BLOCK_SIZE];
@@ -80,7 +73,6 @@ static int test_naive_fs_read_write()
 
     strcpy(pn_buf, "testfile0");
     for (int i = 0; i < 10; ++i) {
-        printf("test file %s\n", pn_buf);
         if (naive_fs_pwrite(pn_buf, 0, BLOCK_SIZE, buffer + 14 * i) != BLOCK_SIZE)
             return -1;
         if (naive_fs_pread(pn_buf, 20 + i, BLOCK_SIZE / 2, read_buffer) != BLOCK_SIZE / 2)

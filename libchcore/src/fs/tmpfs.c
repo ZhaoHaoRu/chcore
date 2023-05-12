@@ -74,7 +74,7 @@ read_file_from_tfs(const char* path, char* buf) {
             }
             ipc_destroy_msg(tmpfs_ipc_struct, ipc_msg);
         } while(ret > 0);
-        // printf("read_file_from_tfs read %d bytes \n", ret);
+
         }
 
         {
