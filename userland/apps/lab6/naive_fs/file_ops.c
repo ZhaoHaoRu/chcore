@@ -4,6 +4,25 @@
 #include "file_ops.h"
 #include "block_layer.h"
 
+#define TEST_BLOCK_NUM 512
+static int start = 1;
+
+
+
+void initialize() {
+    if (start) {
+        printf("initialize begin\n");
+        start = 0;
+        char bitmap[BLOCK_SIZE] = {'\0'};
+        for (int i = 0; i < TEST_BLOCK_NUM; ++i) {
+            int ret = sd_bwrite(1, bitmap);
+            if (ret == -1) {
+                printf("write failed\n");
+            }
+        }
+    }
+}
+
 void num2str(int val, char *result) {
 	char tmp[10] = {'\0'};
 	int i = 0;
@@ -24,6 +43,7 @@ void num2str(int val, char *result) {
 int find_file_by_name (const char *name) {
     char buffer[BLOCK_SIZE] = {'\0'};
     int ret = sd_bread(0, buffer);
+    printf("the root dir is %s\n", buffer);
     if (ret == -1) {
         printf("read failed\n");
         return -1;
@@ -38,12 +58,13 @@ int find_file_by_name (const char *name) {
         if (buffer[i] == '/') {
             if (strncmp(name_buf, name, strlen(name)) == 0) {
                 // find the file
-                printf("[DEBUG] find the file: %s, the wanted: %s\n", name_buf, name);
                 int block_id = 0;
-                while (buffer[i] != '/') {
+                ++i;
+                while (i < BLOCK_SIZE && buffer[i] != '/') {
                     block_id = block_id * 10 + buffer[i] - '0';
                     ++i;
                 }
+                printf("[DEBUG] find the file: %s, the wanted: %s, the block id: %d\n", name_buf, name, block_id);
                 return block_id;
             }
             i += 1;
@@ -70,6 +91,7 @@ int naive_fs_access(const char *name)
     // for convience, the root dir content all in the first block
     // the second block is the bitmap
     // the format is: [name]/[block id]/[name]/[block id]/[name]/[block id]/
+    initialize();
     printf("[DEBUG] navie_fs_access: name: %s\n", name);
     int ret = find_file_by_name(name);
     if (ret >= 0) {
@@ -85,6 +107,7 @@ int naive_fs_creat(const char *name)
 {
     /* LAB 6 TODO BEGIN */
     /* BLANK BEGIN */
+    initialize();
     printf("[DEBUG] naive_fs_creat: name: %s\n", name);
     int ret = find_file_by_name(name);
     if (ret >= 0) {
@@ -191,18 +214,22 @@ int naive_fs_pread(const char *name, int offset, int size, char *buffer)
 {
     /* LAB 6 TODO BEGIN */
     /* BLANK BEGIN */
+    initialize();
     printf("[DEBUG] naive_fs_pread: name: %s\n", name);
-    int ret = find_file_by_name(name);
-    if (ret == -1) {
+    int block_id = find_file_by_name(name);
+    if (block_id == -1) {
+        printf("[DEBUG] find file by name error\n");
         return -1;
     }
     char buf[BLOCK_SIZE] = {'\0'};
-    ret = sd_bread(ret, buf);
+    printf("[DEBUG] the read directory: %d\n", block_id);
+    int ret = sd_bread(block_id, buf);
     if (ret == -1) {
-        printf("read failed\n");
+        printf("[DEBUG] read failed\n");
         return -1;
     }
     int read_size = BLOCK_SIZE - offset <  size ? BLOCK_SIZE - offset : size;
+    printf("[DEBUG] read size: %d\n", read_size);
     memcpy(buffer, buf + offset, read_size);
     return read_size;
     /* BLANK END */
@@ -214,22 +241,20 @@ int naive_fs_pwrite(const char *name, int offset, int size, const char *buffer)
 {
     /* LAB 6 TODO BEGIN */
     /* BLANK BEGIN */
-    printf("[DEBUG] naive_fs_pwrite: name: %s\n", name);
-    int ret = find_file_by_name(name);
-    if (ret == -1) {
+    initialize();
+    int block_id = find_file_by_name(name);
+    if (block_id == -1) {
         return -1;
     }
     char buf[BLOCK_SIZE] = {'\0'};
-    ret = sd_bread(ret, buf);
+    int ret = sd_bread(ret, buf);
     if (ret == -1) {
-        printf("read failed\n");
         return -1;
     }
     int write_size = BLOCK_SIZE - offset <  size ? BLOCK_SIZE - offset : size;
     memcpy(buf + offset, buffer, write_size);
-    ret = sd_bwrite(ret, buf);
+    ret = sd_bwrite(block_id, buf);
     if (ret == -1) {
-        printf("write failed\n");
         return -1;
     }
     return write_size;
@@ -242,6 +267,7 @@ int naive_fs_unlink(const char *name)
 {
     /* LAB 6 TODO BEGIN */
     /* BLANK BEGIN */
+    initialize();
     printf("[DEBUG] naive_fs_unlink: name: %s\n", name);
     int ret = find_file_by_name(name);
     if (ret == -1) {
