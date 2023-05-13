@@ -493,7 +493,6 @@ int sd_Write(const void *pBuffer, size_t nCount)
 	}
 
 	u32 nBlock = m_ullOffset / SD_BLOCK_SIZE;
-	printf("[DEBUG] sd_Write: nBlock = %d, nCount = %d\n", nBlock, nCount);
 	int ret = DoWrite(pBuffer, nCount, nBlock);
 	if (ret < 0) {
 		printf("[DEBUG] sd_Write: DoWrite failed, the ret: %d\n", ret);
@@ -1581,7 +1580,6 @@ int DoRead(u8 * buf, size_t buf_size, u32 block_no)
 		printf("[DEBUG] DoDataCommand(0, buf, buf_size, block_no) < 0\n");
 		return -1;
 	}
-	// printf("[DEBUG] the buf is %s\n", buf);
 	return buf_size;
     /* BLANK END */
     /* LAB 6 TODO END */
@@ -1596,7 +1594,7 @@ int DoWrite(u8 * buf, size_t buf_size, u32 block_no)
 		printf("[DEBUG] EnsureDataMode() != 0\n");
 		return -1;
 	}
-	printf("[DEBUG] buf: %x, buf_size: %d, block_no: %d\n", buf, buf_size, block_no);
+	
 	int ret = DoDataCommand(1, buf, buf_size, block_no);
 	if (ret < 0) {
 		printf("[DEBUG] DoDataCommand(1, buf, buf_size, block_no) < 0\n");

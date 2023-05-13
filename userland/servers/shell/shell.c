@@ -400,7 +400,7 @@ int run_cmd(char *cmdline)
 	// /* LAB 5 TODO BEGIN */
 	printf("%s\n", cmdline);
 	int ret = chcore_procm_spawn(cmdline, &cap);
-	while(true) {}
+	while (true) {}
 	return ret;
 	/* LAB 5 TODO END */
 }
