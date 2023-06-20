@@ -284,6 +284,8 @@ int launch_process(struct launch_process_args *lp_args)
          */
         /* Prepare the stack */
         /* LAB 4 TODO BEGIN: set stack_top and offset */
+        // stack_top表示主线程栈的虚拟地址的顶部。它的计算是通过将MAIN_THREAD_STACK_BASE（主线程栈的虚拟地址的基址）与MAIN_THREAD_STACK_SIZE（主线程栈的大小）相加得到的。这样计算得到的stack_top表示主线程栈的结束地址。
+        // offset表示从主线程栈的基址到首个栈帧的偏移量。在这里，偏移量是通过将MAIN_THREAD_STACK_SIZE减去PAGE_SIZE（页的大小）来计算的。这样计算得到的offset表示栈帧的大小，即首个栈帧的结束地址与主线程栈的基址之间的偏移量。
         stack_top = MAIN_THREAD_STACK_BASE + MAIN_THREAD_STACK_SIZE;
         offset = MAIN_THREAD_STACK_SIZE - PAGE_SIZE;
         /* LAB 4 TODO END */

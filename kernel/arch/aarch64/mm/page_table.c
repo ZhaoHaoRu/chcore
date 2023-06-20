@@ -454,8 +454,6 @@ int map_range_in_pgtbl_huge(void *pgtbl, vaddr_t va, paddr_t pa, size_t len,
                         set_pte_flags(&new_entry, flags, USER_PTE);
                         cur_ptp->ent[entry_index] = new_entry;
 
-                        //                        kdebug("in map the virtual address: %lu, the physical address: %lu\n", va, pa);
-
                         length -= PAGE_SIZE;
                         va += PAGE_SIZE;
                         pa += PAGE_SIZE;

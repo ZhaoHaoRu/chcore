@@ -249,13 +249,7 @@ int fscanf(FILE * f, const char * fmt, ...) {
 		} 
 		++fmt_ptr;
 	}
-
-	// TODO: whether need lseek?
-	// new_msg = ipc_create_msg(fs_ipc_struct, sizeof(struct fs_request), 0);
-	// if (new_msg == NULL) {
-	// 	printf("[fscanf] create lseek new msg fail\n");
-	// 	return -1;
-	// }
+	
 	/* LAB 5 TODO END */
     return 0;
 }

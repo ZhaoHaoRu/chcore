@@ -109,7 +109,7 @@ int handle_trans_fault(struct vmspace *vmspace, vaddr_t fault_addr)
                          * Repeated mapping operations are harmless.
                          */
                         /* LAB 3 TODO BEGIN */
-                        // readd the mapping
+                        // read the mapping
                         ret = map_range_in_pgtbl(vmspace->pgtbl, fault_addr, pa, PAGE_SIZE, perm);
                         BUG_ON(ret != 0);
                         /* LAB 3 TODO END */

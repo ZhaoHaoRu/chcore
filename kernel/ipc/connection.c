@@ -529,7 +529,7 @@ void sys_ipc_return(u64 ret, u64 cap_num)
                 ipc_send_cap_to_client(conn, cap_num);
         }
 
-        /* Lab4: update the thread's state and sc */
+        /* Lab4: update the thread's state and sc（schedule context）*/
         /* LAB 4 TODO BEGIN */
         current_thread->thread_ctx->state = TS_INIT;
         conn->source->thread_ctx->sc = current_thread->thread_ctx->sc;

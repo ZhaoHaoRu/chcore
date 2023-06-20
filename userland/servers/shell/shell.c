@@ -99,6 +99,7 @@ static void get_dent_name(struct dirent *p, char name[])
 }
 
 /* See demo_getdents() for example */
+// 读取目录项信息
 int getdents(int fd, char *buf, int count)
 {
 	struct ipc_msg *ipc_msg = 0;

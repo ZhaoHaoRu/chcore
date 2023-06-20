@@ -223,6 +223,9 @@ void obj_put(void *obj)
         }
 }
 
+// 这个和下面`create_root_cap_group`的不同点：
+// sys_create_cap_group() 是系统调用函数，用于在运行时创建一个新的 cap_group 对象。它接受用户空间传递的参数
+// create_root_cap_group() 是用于创建根 cap_group 对象的函数，它在静态上下文中创建 cap_group 对象，并不涉及用户空间传递的参数。
 int sys_create_cap_group(u64 pid, u64 cap_group_name, u64 name_len, u64 pcid)
 {
         struct cap_group *new_cap_group;
