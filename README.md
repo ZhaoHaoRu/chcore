@@ -1,6 +1,10 @@
 # ChCore
 
-This is the repository of ChCore labs in SE315, 2022 Spring.
+> #### NOTE: 
+>
+> the start code for each lab are in the branches with prefix `upstream`
+
+This is the repository of ChCore labs in SE315, 2023 Spring.
 
 ## Build
 
